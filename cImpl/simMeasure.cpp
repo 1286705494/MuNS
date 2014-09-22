@@ -37,10 +37,10 @@ float g_dampingFactor = 0.9;
 std::string g_initAlgorName = "degRatioInit";
 float g_ioBalance = 0.5;
 bool g_bUseInputBalance = false;
-float g_icebergThres = 0.1;
-float g_icebergApproxFactor = 0.1;
+float g_icebergThres = 0.8;
+float g_icebergApproxFactor = 0.5;
 
-float g_earlySimStopThres = 0.1;
+float g_earlySimStopThres = 0.01;
 
 
 /* ************************************************************* */
@@ -146,30 +146,36 @@ int main(int argc, char *argv[])
     		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance);
     	}
     }
-    else if (strcmp(sMeasure, "autoSimEarlyStop") == 0) {
-    	if (g_bUseConvEpsilon) {
-    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance);
-    	}
-    	// not using convergence epsilon
-    	else {
-    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance);
-    	}
+    else if (strcmp(sMeasure, "earlyStopAutosim") == 0) {
+//    	if (g_bUseConvEpsilon) {
+//    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance);
+//    	}
+//    	// not using convergence epsilon
+//    	else {
+//    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance);
+//    	}
+		if (g_bUseConvEpsilon) {
+			pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, false, g_icebergThres, g_icebergApproxFactor);
+		}
+		else {
+			pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, false, g_icebergThres, g_icebergApproxFactor);
+		}
     }
     else if (strcmp(sMeasure, "icebergAutosim") == 0) {
     	// not using earlyStop
     	if (g_bUseConvEpsilon) {
-    		pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergThres, g_icebergApproxFactor);
+    		pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
     	}
     	else {
-    		pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergThres, g_icebergApproxFactor);
+    		pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
     	}
     }
-    else if (strcmp(sMeasure, "icebergAutosimEarlyStop") == 0) {
+    else if (strcmp(sMeasure, "icebergEarlyStopAutosim") == 0) {
 		if (g_bUseConvEpsilon) {
-			pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergThres, g_icebergApproxFactor);
+			pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
 		}
 		else {
-			pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergThres, g_icebergApproxFactor);
+			pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
 		}
 	}
     else {

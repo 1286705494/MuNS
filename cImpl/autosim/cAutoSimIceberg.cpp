@@ -50,14 +50,14 @@
 
 
 
-AutoSimIceberg::AutoSimIceberg(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float simThres, float approxFaction) throw(std::invalid_argument)
-	: AutoSim(dampingFactor, maxIter, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
+AutoSimIceberg::AutoSimIceberg(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useIceberg, float simThres, float approxFaction) throw(std::invalid_argument)
+	: AutoSim(dampingFactor, maxIter, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_bIceberg(useIceberg), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
 {
 } // end of AutoSim()
 
 
-AutoSimIceberg::AutoSimIceberg(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float simThres, float approxFaction) throw(std::invalid_argument)
-	: AutoSim(dampingFactor, maxIter, convEpsilon, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
+AutoSimIceberg::AutoSimIceberg(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useIceberg, float simThres, float approxFaction) throw(std::invalid_argument)
+	: AutoSim(dampingFactor, maxIter, convEpsilon, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_bIceberg(useIceberg), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
 {
 } // end of AutoSim()
 
@@ -122,8 +122,7 @@ float* AutoSimIceberg::computeSim(const std::list<int>& vSrc, const std::list<in
     }
 
 
-    // compute iceberg to determine which vertex pairs to keep or disgard
-    // will update m_hCompVertPairs
+    // compute iceberg to determine which vertex pairs
     icebergFilter(vvInNeigh, vvOutNeigh, pmValidPairs, beta);
 
 
@@ -376,38 +375,45 @@ void AutoSimIceberg::icebergFilter(const std::vector< std::vector<int> >& vvInNe
 
 	for (int i = 0; i < vertNum; ++i) {
 		for (int j = i + 1; j < vertNum; ++j) {
-			// use float to avoid integer devision
-			float inDegi = vvInNeigh[i].size();
-			int inDegj = vvInNeigh[j].size();
+			// we only do iceberg filtering if need to be
+			if (m_bIceberg) {
+				// use float to avoid integer devision
+				float inDegi = vvInNeigh[i].size();
+				int inDegj = vvInNeigh[j].size();
 
-			float inRatio;
-			if (inDegi >= inDegj) {
-				inRatio = inDegj / inDegi;
+				float inRatio;
+				if (inDegi >= inDegj) {
+					inRatio = inDegj / inDegi;
+				}
+				else {
+					inRatio = inDegi / inDegj;
+				}
+
+				// use float to avoid integer devision
+				float outDegi = vvOutNeigh[i].size();
+				int outDegj = vvOutNeigh[j].size();
+
+				float outRatio;
+				if (outDegi >= outDegj) {
+					outRatio = outDegj / outDegi;
+				}
+				else {
+					outRatio = outDegi / outDegj;
+				}
+
+
+				// perform rule1 test now
+				if ((1-beta) * inRatio + beta * outRatio > thresRatio) {
+
+					// perform rule2 test
+					// find maximum matching between u and v
+
+					hValidPair->insert(make_pair(i, j));
+				}
 			}
+			// no iceberg so insert all pairs into hValidPair
 			else {
-				inRatio = inDegi / inDegj;
-			}
-
-			// use float to avoid integer devision
-			float outDegi = vvOutNeigh[i].size();
-			int outDegj = vvOutNeigh[j].size();
-
-			float outRatio;
-			if (outDegi >= outDegj) {
-				outRatio = outDegj / outDegi;
-			}
-			else {
-				outRatio = outDegi / outDegj;
-			}
-
-
-			// perform rule1 test now
-			if ((1-beta) * inRatio + beta * outRatio > thresRatio) {
-
-				// perform rule2 test
-				// find maximum matching between u and v
-
-				hValidPair->insert(make_pair(i, j));
+				hValidPair->insert(make_pair(i,j));
 			}
 
 		} // end of inner for loop over vertices

@@ -41,6 +41,9 @@ class AutoSimIceberg : public AutoSim
 {
 protected:
 
+	/** Whether to use iceberg. */
+	bool m_bIceberg;
+
 	/** Iceberg filter parameter.  All similarities less than this are estimated. */
 	float m_simThres;
 
@@ -61,8 +64,8 @@ public:
 //	AutoSimIceberg(float dampingFactor, int maxIter, const std::string& sInitAlgor, float simThres, float approxFaction) throw(std::invalid_argument);
 //	AutoSimIceberg(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, float simThres, float approxFaction) throw(std::invalid_argument);
 
-	AutoSimIceberg(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float simThres, float approxFaction) throw(std::invalid_argument);
-	AutoSimIceberg(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float simThres, float approxFaction) throw(std::invalid_argument);
+	AutoSimIceberg(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useIceberg, float simThres, float approxFaction) throw(std::invalid_argument);
+	AutoSimIceberg(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useIceberg, float simThres, float approxFaction) throw(std::invalid_argument);
 
 	virtual ~AutoSimIceberg();
 

@@ -18,7 +18,7 @@ def main():
     # process options
     try:
         # option list
-        options = "p:t:c:b:n:e:s:"
+        options = "p:t:c:b:n:e:s:i:a:"
         # get options
         optList, remainArgs = getopt.gnu_getopt(sys.argv[1:], options)
     except getopt.GetoptError, err:
@@ -33,6 +33,8 @@ def main():
     topNCompared = 10
     simEpsilon = 0.001
     earlySimStopThres = 0.1
+    icebergThres = 0.8
+    iceBergAproxFactor = 0.5
     for opt, arg in optList:
         if opt == "-p":
             sMode = arg
@@ -49,6 +51,10 @@ def main():
             assert(simEpsilon <= 1.0 and simEpsilon >= 0.0)            
         elif opt == '-s':
             earlySimStopThres = float(arg)
+        elif opt == '-i':
+            icebergThres = float(arg)       
+        elif opt == '-a':
+            iceBergAproxFactor = float(arg)
         else:
             print >> sys.stderr, sys.argv[0] + " -m <mat index wanted> [edge list]"
             sys.exit(2)    
@@ -71,7 +77,9 @@ def main():
     sInitAlgor = 'degBinaryInit'
 #     lsInit = ['degRatioInit']
 #     lsAlgor = ['autosim', 'autoSimEarlySim', 'rolesim', 'matchsim', 'simrank', 'prank']
-    lsAlgor = ['icebergAutosim']
+    lsAlgor = ['icebergAutosim', 'earlyStopAutosim', 'icebergEarlyStopAutosim']
+#     lsAlgor = ['earlyStopAutosim']
+#     lsAlgor = ['icebergEarlyStopAutosim']
 #     lsAlgor = ['simrank']
 #     lsAlgor = ['autosim']
     
@@ -88,7 +96,7 @@ def main():
         lResults = []
 
         sTempOutFile = 'temp.out'
-        sExec = '~/Programming/workspace/matlabSimrank/rolesim2/cRolesim2/Release/cRoleSim2'
+        sExec = '~/Programming/workspace/cVertSim/cImpl/Release/cVertsim'
         
         for dampingFactor in lLambdaRange:
             print [sExec, 
@@ -98,6 +106,8 @@ def main():
 #                                 ' -b ' + str(ioBalance),
                                 ' -d ' + str(dampingFactor),
                                 ' -s ' + str(earlySimStopThres),
+                                ' -c ' + str(icebergThres),
+                                ' -a ' + str(iceBergAproxFactor),
                                 sGraphFile,
                                 sAlgorname, 
                                 str(vertNum),
@@ -110,6 +120,8 @@ def main():
 #                                 ' -b ' + str(ioBalance) +
                                 ' -d ' + str(dampingFactor) +
                                 ' -s ' + str(earlySimStopThres) +
+                                ' -c ' + str(icebergThres) +
+                                ' -a ' + str(iceBergAproxFactor) +                                
                                 ' ' + sGraphFile +
                                 ' ' + sAlgorname +
                                 ' ' + str(vertNum) +
