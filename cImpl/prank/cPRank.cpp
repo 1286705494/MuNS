@@ -81,10 +81,11 @@ float* PRank::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar,
 
 	    		// loop over the in neighbours
 	    		typename vector<int>::const_iterator niti = vvInNeigh[i].begin();
-	    		typename vector<int>::const_iterator nitj = vvInNeigh[j].begin();
+	    		typename vector<int>::const_iterator nitj;
 
 	    		float simTotal = 0;
 	    		for ( ; niti != vvInNeigh[i].end(); ++niti) {
+	    			nitj = vvInNeigh[j].begin();
 	    			for ( ; nitj != vvInNeigh[j].end(); ++nitj) {
 	    				simTotal += mTempPrevSim[*niti + *nitj * vertNum];
 	    			}
@@ -99,10 +100,10 @@ float* PRank::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar,
 
 	    		// loop over the out neighbours
 	    		niti = vvOutNeigh[i].begin();
-	    		nitj = vvOutNeigh[j].begin();
 
 	    		simTotal = 0;
 	    		for ( ; niti != vvOutNeigh[i].end(); ++niti) {
+	    			nitj = vvOutNeigh[j].begin();
 	    			for ( ; nitj != vvOutNeigh[j].end(); ++nitj) {
 	    			    simTotal += mTempPrevSim[*niti + *nitj * vertNum];
 	    			}

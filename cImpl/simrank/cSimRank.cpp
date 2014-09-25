@@ -77,10 +77,10 @@ float* SimRank::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 
 	    		// loop over the neighbours
 	    		typename vector<int>::const_iterator niti = vvInNeigh[i].begin();
-	    		typename vector<int>::const_iterator nitj = vvInNeigh[j].begin();
 
 	    		float simTotal = 0;
 	    		for ( ; niti != vvInNeigh[i].end(); ++niti) {
+	    			typename vector<int>::const_iterator nitj = vvInNeigh[j].begin();
 	    			for ( ; nitj != vvInNeigh[j].end(); ++nitj) {
 	    				simTotal += mTempPrevSim[*niti + *nitj * vertNum];
 	    			}
