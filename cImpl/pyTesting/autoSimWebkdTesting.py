@@ -18,7 +18,7 @@ def main():
     # process options
     try:
         # option list
-        options = "p:t:c:b:n:e:s:i:a:"
+        options = "p:t:e:b:n:l:s:i:a:"
         # get options
         optList, remainArgs = getopt.gnu_getopt(sys.argv[1:], options)
     except getopt.GetoptError, err:
@@ -40,13 +40,13 @@ def main():
             sMode = arg
         elif opt == '-t':
             maxIter = int(arg)
-        elif  opt == '-c':
+        elif  opt == '-e':
             convEpsilon = float(arg)
         elif  opt == '-b':
             ioBalance = float(arg)
         elif  opt == '-n':
             topNCompared = int(arg)
-        elif  opt == '-e':
+        elif  opt == '-l':
             simEpsilon = float(arg)
             assert(simEpsilon <= 1.0 and simEpsilon >= 0.0)            
         elif opt == '-s':

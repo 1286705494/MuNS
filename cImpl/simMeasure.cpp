@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstring>
+#include <unordered_set>
 #include <boost/tokenizer.hpp>
 
 #include "autosim/cAutoSim.h"
@@ -58,7 +59,8 @@ int main(int argc, char *argv[])
 	int nextOptIndex = getOptions(argc, argv);
 
 	// there should be one or more files
-	if (argc - nextOptIndex != 4) {
+	if (argc - nextOptIndex != 3) {
+
 		cerr << "Incorrect number of arguments." << endl;
 		usage(argv[0]);
 	}
@@ -66,23 +68,28 @@ int main(int argc, char *argv[])
 
     char* sGraphFilename = argv[nextOptIndex];
     char* sMeasure = argv[nextOptIndex+1];
-    int vertNum = atoi(argv[nextOptIndex+2]);
-    char* sSimOutFilename = argv[nextOptIndex+3];
+//    int vertNum = atoi(argv[nextOptIndex+2]);
+    char* sSimOutFilename = argv[nextOptIndex+2];
     
 
     // Read in file
     ifstream fIn(sGraphFilename);
     
     
-    boost::char_separator<char> sSep(",");
+    boost::char_separator<char> sSep(",\t");
     typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
             
- 
+    unordered_set<int> vUniqueVerts;
+
     list<int> vSrc;
     list<int> vTar;
     
     string sLine;
     while(getline(fIn, sLine)) {
+    	// we ignore lines that start with '#'
+    	if (sLine[0] == '#') {
+    		continue;
+    	}
         // tokenize string
         Tokenizer tok(sLine, sSep);
         typename Tokenizer::const_iterator it = tok.begin();
@@ -93,9 +100,15 @@ int main(int argc, char *argv[])
         int tar = atoi(sTar.c_str());
         vSrc.push_back(src);
         vTar.push_back(tar);
+
+        vUniqueVerts.insert(src);
+        vUniqueVerts.insert(tar);
     }
     
     fIn.close();
+
+    // number of vertices
+    int vertNum = vUniqueVerts.size();
 
 #ifdef _TIMING_ALGOR_
     // start timer
@@ -222,14 +235,13 @@ int main(int argc, char *argv[])
 
     fOut << "Iteration: " << pfSim->getIterRan() << endl;
 
-
+    // output upper diagonal, minus the diagonal, which is always 1 for all our measures
 	for (int i = 0; i < vertNum; ++i) {
-		for (int j = 0; j < vertNum-1; ++j) {
+		for (int j = i+1; j < vertNum-1; ++j) {
 			fOut << mSim[i + j*vertNum] << ",";
 		}
 		fOut << mSim[i + (vertNum-1) * vertNum] << endl;
 	}
-
 
     fOut.close();
 
@@ -316,6 +328,6 @@ int getOptions(int argc, char* argv[])
 void usage(char* sProgname)
 {
 	using namespace std;
-	cerr << sProgname << ": [inFilename] [vertnum] [outFilename]" << endl;
+	cerr << sProgname << ": [inFilename] [outFilename]" << endl;
 	exit(1);
 }

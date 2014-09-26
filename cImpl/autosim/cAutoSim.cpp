@@ -17,7 +17,7 @@
 #endif
 
 
-
+inline int index(int r, int c, int vertNum) { return r < c ? r + c * vertNum : c + r * vertNum; }
 
 
 

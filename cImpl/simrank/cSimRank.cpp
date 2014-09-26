@@ -13,6 +13,9 @@
 #include "cSimRank.h"
 #include "../utils/matUtils.h"
 
+inline int index(int r, int c, int vertNum) { return r < c ? r + c * vertNum : c + r * vertNum; }
+
+
 
 SimRank::SimRank(float dampingFactor,int maxIter)
 	: DampedSimilarity(dampingFactor, maxIter)
@@ -35,7 +38,7 @@ float* SimRank::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 {
 	using namespace std;
 
-    // similarity matrix (column-major)
+    // similarity matrix (column-major, and we only store the upper triangle, minus the diagonal (self-similarities, which is always 1)
 	float* mPrevSim = new float[vertNum*vertNum];
 	float* mCurrSim = new float[vertNum*vertNum];
 	float **pmPrevSim = &mPrevSim;
@@ -54,14 +57,17 @@ float* SimRank::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 
     // initialise the values of simRank
     // non-diagonals to 0
-    for (int c = 0; c < vertNum; ++c) {
-    	for (int r = 0; r < vertNum; ++r) {
+    for (int r = 0; r < vertNum; ++r) {
+    	for (int c = r+1; c < vertNum; ++c) {
+    		// no need to use index() as r always < c)
     		mPrevSim[r + c*vertNum] = 0;
     	}
     }
-    // diagonals to 1
+
+    // diagonals to 1 (since this isn't updated afterwards)
     for (int i = 0; i < vertNum; ++i) {
     	mPrevSim[i + i * vertNum]  = 1;
+    	mCurrSim[i + i * vertNum]  = 1;
     }
 
     // perform loop iterations
@@ -71,7 +77,7 @@ float* SimRank::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
     	float* mTempPrevSim = *pmPrevSim;
     	float *mTempCurrSim = *pmCurrSim;
 
-        // loop through all non-diagonal pairs
+        // loop through all upper non-diagonal pairs
 	    for (int i = 0; i < vertNum; ++i) {
 	    	for (int j = i+1; j < vertNum; ++j) {
 
@@ -83,23 +89,23 @@ float* SimRank::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 	    			typename vector<int>::const_iterator nitj = vvInNeigh[j].begin();
 	    			for ( ; nitj != vvInNeigh[j].end(); ++nitj) {
 	    				simTotal += mTempPrevSim[*niti + *nitj * vertNum];
+//	    				simTotal += mTempPrevSim[index(*niti, *nitj, vertNum)];
 	    			}
 	    		}
 
 	    		if (vvInNeigh[i].size() > 0 && vvInNeigh[j].size() > 0) {
+	    			// no need to use index, as i < j
 	    			mTempCurrSim[i + j * vertNum] = m_dampingFactor * simTotal / (vvInNeigh[i].size() * vvInNeigh[j].size());
 	    		}
 	    		else {
+	    			// no need to use index, as i < j
 	    			mTempCurrSim[i + j * vertNum] = 0;
 	    		}
 	    		mTempCurrSim[j + i * vertNum] = mTempCurrSim[i + j * vertNum];
             } // end of inner for
         } // end of outer for
 
-	    // loop through diagonal pairs (set to one) (no need to, since it doesn't change
-	    for (int i = 0; i < vertNum; ++i) {
-	    	mTempCurrSim[i + i * vertNum] = 1;
-	    }
+	    // loop through diagonal pairs (set to one) (no need to, since it doesn't change)
 
 
 #ifdef _COLLECT_SIM_DELTA_
