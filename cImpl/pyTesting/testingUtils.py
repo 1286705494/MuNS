@@ -24,9 +24,11 @@ def loadPart(sAbsPartFile, sMode):
         currVert = 0
         with open(sAbsPartFile, 'r') as fPart:
             csvPart = csv.reader(fPart, delimiter=',')
-            for lRow in csvPart:
+            for lRow in csvPart:        
                 # only take first element as partition index
-                pos = int(lRow[0])
+                pos = next((i for (i, x) in enumerate(lRow) if int(x) > 0), None)
+                assert(pos != None)
+
                 # add partitions while we still don't have enough
                 while len(llPartitions) <= pos:
                     llPartitions.append([]) 
@@ -47,7 +49,21 @@ def loadPart(sAbsPartFile, sMode):
                     llPartitions.append([]) 
                 llPartitions[pos].append(currVert)
                 
-                currVert += 1        
+                currVert += 1       
+    elif sMode == 'singleList':
+        currVert = 0
+        
+        with open(sAbsPartFile, 'r') as fPart:
+            csvPart = csv.reader(fPart, delimiter=',')
+            for lRow in csvPart:
+                # only take first element as partition index
+                pos = int(lRow[0]) # we dont' use
+                # add partitions while we still don't have enough (assume pos start at 0)
+                while len(llPartitions) <= pos:
+                    llPartitions.append([]) 
+                llPartitions[pos].append(currVert)
+                
+                currVert += 1                   
             
     return llPartitions
 
@@ -68,7 +84,8 @@ def avgIntraSim(llSim, llPartitions):
         totalPairs += len(lPart) * len(lPart)
         for x in lPart:
             for y in lPart:
-                totalSim += llSim[x][y]
+                if x != y:
+                    totalSim += llSim[x][y]
                 
     return totalSim / totalPairs
 
@@ -204,12 +221,18 @@ def avgPrecisionAtK(llSim, llPartition, topN):
     for lPart in llPartition:
         setPart = set(lPart)
         for v in lPart:
-            # get corresonding row for sim
-            lSortedIndices = [i for (i,val) in sorted(enumerate(llSim[v]), key=itemgetter(1), reverse=True)]
+#             print v
+            # get corresonding row for sim, excluding the vertices itself
+#             lCurrSim = llSim[v][:v] + llSim[v][v+1:]
+            lSortedIndices = [i for (i,val) in sorted(enumerate(llSim[v]), key=itemgetter(1), reverse=True) if i != v]
+#             print lSortedIndices
             setTopN = set(lSortedIndices[:topN])
+#             print setTopN
                    
             intersection = len(setTopN.intersection(setPart))
+#             print intersection
             totalPrecision += float(intersection) / len(setTopN)
+#             print float(intersection) / len(setTopN)
             
             elemNum += 1
              
@@ -233,7 +256,7 @@ def avgRPrecision(llSim, llPartition):
         topN = len(setPart)
         for v in lPart:
             # get corresonding row for sim
-            lSortedIndices = [i for (i,val) in sorted(enumerate(llSim[v]), key=itemgetter(1), reverse=True)]
+            lSortedIndices = [i for (i,val) in sorted(enumerate(llSim[v]), key=itemgetter(1), reverse=True) if i != v]
             setTopN = set(lSortedIndices[:topN])
                    
             intersection = len(setTopN.intersection(setPart))
@@ -296,7 +319,7 @@ def avgMAP(llSim, llPartition):
         for v in lPart:
             currPrecision = 0
             # get corresonding row for sim
-            lSortedIndices = [i for (i,val) in sorted(enumerate(llSim[v]), key=itemgetter(1), reverse=True)]
+            lSortedIndices = [i for (i,val) in sorted(enumerate(llSim[v]), key=itemgetter(1), reverse=True) if i != v]
             
             # for each vertex in the same partition as v (apart from v), compute the precision of retrieving that element
             for o in lPart:
@@ -346,6 +369,72 @@ def computeCompactness(mDis, vClusters, vMedriods):
     return compactness
 
 
+
+###############################################################
+
+
+def avgStatsShell(llSim, llPartition, vPartMembership, llDShells, rowNum, colNum, topN):
+    """
+    Compute the precision of the topN peers of each vertex and compare with the vertices in the same class as each vertex.
+    """
+    
+    
+    lShellPrecision = []
+    
+    # loop through the elements in non-empty llDShells
+    for r in range(rowNum):
+        for c in range(colNum):
+            lCurrShell = llDShells[r + rowNum * c]
+            if (len(lCurrShell) > 0):
+                elemNum = 0
+                totalPrecision = 0
+                totalMAPPrecision = 0
+                
+                for v in lCurrShell: 
+                    currPart = vPartMembership[v]
+                    setPart = set(llPartition[currPart])
+    
+                    lSortedIndices = [i for (i,val) in sorted(enumerate(llSim[v]), key=itemgetter(1), reverse=True) if i != v]
+    #             print lSortedIndices
+                    setTopN = set(lSortedIndices[:topN])
+    #             print setTopN   
+                    intersection = len(setTopN.intersection(setPart))
+    #             print intersection
+                    totalPrecision += float(intersection) / len(setTopN)
+    #             print float(intersection) / len(setTopN)
+                
+                    elemNum += 1
+                    
+                    # compute MAP
+                    mapPrecision = 0
+                    for o in llPartition[currPart]:
+                        if o != v:
+                            currRank = lSortedIndices.index(o)
+                            setMAPTopN = set(lSortedIndices[:currRank])
+                            
+                            intersection = len(setTopN.intersection(setMAPTopN))
+                            currPrecision = 0
+                            if len(setMAPTopN) > 0:
+                                currPrecision = float(intersection) / len(setMAPTopN)
+                            assert(currPrecision <= 1)
+                    
+                            mapPrecision += currPrecision                    
+                        
+                    if len(llPartition[currPart])-1 > 0:
+                        avgPartPrecision = float(mapPrecision) / (len(llPartition[currPart])-1)
+                        assert(avgPartPrecision <= 1)
+                        totalMAPPrecision += avgPartPrecision                
+                    
+                lShellPrecision.append((r,c,totalPrecision / elemNum, totalMAPPrecision / elemNum))                     
+        
+
+
+
+
+
+    return lShellPrecision
+    
+
 #################################################################
 
 def computeDShell(mDiGraph, outDegBinNum, inDegBinNum):
@@ -384,7 +473,7 @@ def computeDShell(mDiGraph, outDegBinNum, inDegBinNum):
 #         print outBin
 #         print inBin
             
-        llDShells[(outBin-1) * inDegBinNum + (inBin-1)].append(vertIndex)
+        llDShells[(outBin-1) * outDegBinNum + (inBin-1)].append(vertIndex)
         
     return llDShells
         
@@ -441,11 +530,11 @@ def intraCrossShellsRank(llDShells, lRank, rowNum, colNum):
                 lPartInner = llDShells[j]
                 if len(lPartInner) > 0:
                     # get indicues
-                    outerR = math.floor(i / colNum)
-                    outerC = i % colNum
+                    outerR = math.floor(i / rowNum)
+                    outerC = i % rowNum
                     
-                    innerR = math.floor(j / colNum)
-                    innerC = j % colNum
+                    innerR = math.floor(j / rowNum)
+                    innerC = j % rowNum
                     
                     mShellInterPairNum[abs(innerR - outerR), abs(innerC - outerC)] += len(lPartOuter) * len(lPartInner)          
                     for x in lPartOuter:
