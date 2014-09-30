@@ -14,6 +14,7 @@ import subprocess as sp
 import numpy as np
 import networkx as nx
 from testingUtils import *
+from itertools import chain
 
 def main():
     # process options
@@ -85,16 +86,17 @@ def main():
     lLambdaRange = [0.9]
 #     lBetaRange = [0.5]
 #     lLambdaRange = [0.9]
-#     sInitAlgor = 'binaryInit'
-    sInitAlgor = 'degRatioInit'
+    sInitAlgor = 'binaryInit'
+#     sInitAlgor = 'degRatioInit'
+    ioBalance = 0.1
 #     sInitAlgor = 'degBinaryInit'
 #     lsAlgor = ['autosim', 'rolesim', 'matchsim', 'simrank', 'prank']
-    lsAlgor = ['autosim', 'rolesim']
+#     lsAlgor = ['autosim', 'rolesim']
 #     lsAlgor = ['icebergAutosim', 'earlyStopAutosim', 'icebergEarlyStopAutosim']
 #     lsAlgor = ['earlyStopAutosim']
 #     lsAlgor = ['icebergEarlyStopAutosim']
 #     lsAlgor = ['simrank']
-#     lsAlgor = ['autosim']
+    lsAlgor = ['autosim']
     
     
     gGraph = nx.DiGraph()
@@ -134,7 +136,7 @@ def main():
                                 ' -t ' + str(maxIter), 
                                 ' -e ' + str(convEpsilon), 
                                 ' -i ' + sInitAlgor,
-#                                 ' -b ' + str(ioBalance),
+                                ' -b ' + str(ioBalance),
                                 ' -d ' + str(dampingFactor),
                                 ' -s ' + str(earlySimStopThres),
                                 ' -c ' + str(icebergThres),
@@ -147,7 +149,7 @@ def main():
                                 ' -t ' + str(maxIter) + 
                                 ' -e ' + str(convEpsilon) + 
                                 ' -i ' + sInitAlgor +
-#                                 ' -b ' + str(ioBalance) +
+                                ' -b ' + str(ioBalance) +
                                 ' -d ' + str(dampingFactor) +
                                 ' -s ' + str(earlySimStopThres) +
                                 ' -c ' + str(icebergThres) +
@@ -208,7 +210,9 @@ def main():
                     # we compute the precision for each non-zero shell
                     precAtKShell = avgStatsShell(llSim, llPartitions, vPartMembership, llDShells, outBinNum, inBinNum, topNCompared)
                     
-                    currRow.append(precAtKShell)
+                    
+#                     currRow.append(precAtKShell)
+                    currRow.extend(list(chain.from_iterable(precAtKShell)))
                 
                 # store results
 #                 lResults.append([sAlgorname, sInitAlgor, ioBalance, dampingFactor, runningTime, iterNum, intra, inter, intraInterRatio, intraRank, interRank, precisionAtK, rPrecision, MAP])

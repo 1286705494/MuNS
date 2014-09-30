@@ -20,7 +20,7 @@ def main():
     # process options
     try:
         # option list
-        options = "t:c:b:k:m:se:"
+        options = "t:c:b:k:m:se:o"
         # get options
         optList, remainArgs = getopt.gnu_getopt(sys.argv[1:], options)
     except getopt.GetoptError, err:
@@ -36,6 +36,7 @@ def main():
     outBinNum = 10
     bShellAnalysis = False
     simEpsilon = 0.001
+    bVertSubtractOne = False
     for opt, arg in optList:
         if opt == '-t':
             maxIter = int(arg)
@@ -54,18 +55,19 @@ def main():
             bShellAnalysis = True
         elif  opt == '-e':
             simEpsilon = float(arg)
-            assert(simEpsilon <= 1.0 and simEpsilon >= 0.0)               
+            assert(simEpsilon <= 1.0 and simEpsilon >= 0.0)      
+        elif opt == '-o':
+            bVertSubtractOne = True         
         else:
             print >> sys.stderr, sys.argv[0] + " -m <mat index wanted> [edge list]"
             sys.exit(2)    
     
     # check number of arguments
-    if len(remainArgs) != 3:
+    if len(remainArgs) != 2:
         usage(sys.argv[0])
     
     sGraphFile = remainArgs[0]    
     sResultsOutPrefix = remainArgs[1]
-    vertNum = int(remainArgs[2])
     
     
     
@@ -91,31 +93,24 @@ def main():
         lResults = []
 
         sTempOutFile = 'temp.out'
-        sExec = '~/Programming/workspace/matlabSimrank/rolesim2/cRolesim2/Release/cRoleSim2'
+        sExec = '~/Programming/MuNS/cImpl/Release/cVertSim'
         
         for dampingFactor in lLambdaRange:
-            print [sExec, 
+            lPara = [
                                 ' -t ' + str(maxIter), 
                                 ' -e ' + str(convEpsilon), 
                                 ' -i ' + sInitAlgor,
 #                                 ' -b ' + str(ioBalance),
-                                ' -d ' + str(dampingFactor),
-                                sGraphFile,
-                                sAlgorname, 
-                                str(vertNum),
-                                sTempOutFile
-                                ]
-            proc = sp.Popen(sExec + 
-                                ' -t ' + str(maxIter) + 
-                                ' -e ' + str(convEpsilon) + 
-                                ' -i ' + sInitAlgor +
-#                                 ' -b ' + str(ioBalance) +
-                                ' -d ' + str(dampingFactor) +
-                                ' ' + sGraphFile +
-                                ' ' + sAlgorname +
-                                ' ' + str(vertNum) +
-                                ' ' + sTempOutFile
-                                ,
+                                ' -d ' + str(dampingFactor)
+                     ]
+            
+            if bVertSubtractOne:
+                lPara.append(' -m ')
+                
+            lExecString = [sExec] + lPara + [sGraphFile,sAlgorname, sTempOutFile] 
+            print lExecString
+                                
+            proc = sp.Popen(" ".join(lExecString),
                                 shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
             sOut, sErr = proc.communicate()
             print sOut
@@ -162,6 +157,10 @@ def main():
 #                             print lRow
                             src = int(lRow[0])
                             tar = int(lRow[1])
+                            
+                            if bVertSubtractOne:
+                                src -= 1
+                                tar -= 1
                             
                             gGraph.add_edge(src, tar)
                         

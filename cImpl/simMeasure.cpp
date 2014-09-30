@@ -43,6 +43,8 @@ float g_icebergApproxFactor = 0.5;
 
 float g_earlySimStopThres = 0.01;
 
+bool g_bVertSubtractOne = false;
+
 
 /* ************************************************************* */
 
@@ -76,7 +78,7 @@ int main(int argc, char *argv[])
     ifstream fIn(sGraphFilename);
     
     
-    boost::char_separator<char> sSep(",\t");
+    boost::char_separator<char> sSep(",\t ");
     typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
             
     unordered_set<int> vUniqueVerts;
@@ -98,6 +100,11 @@ int main(int argc, char *argv[])
         ++it;
         string sTar = *it;
         int tar = atoi(sTar.c_str());
+        if (g_bVertSubtractOne) {
+        	src -= 1;
+        	tar -= 1;
+        }
+
         vSrc.push_back(src);
         vTar.push_back(tar);
 
@@ -287,7 +294,7 @@ int getOptions(int argc, char* argv[])
 	/*
 	* f -
 	*/
-	const char* optString = "t:d:i:e:b:c:a:s:";
+	const char* optString = "t:d:i:e:b:c:a:s:m";
 	while ((currOpt = getopt(argc, argv, optString)) != -1) {
 		switch (currOpt) {
 			case 't':
@@ -316,6 +323,9 @@ int getOptions(int argc, char* argv[])
 				break;
 			case 's':
 				g_earlySimStopThres = atof(optarg);
+				break;
+			case 'm':
+				g_bVertSubtractOne = true;
 				break;
 			default:
 				std::cerr << currOpt << " is not a valid option." << std::endl;
