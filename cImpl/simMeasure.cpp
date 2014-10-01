@@ -43,7 +43,10 @@ float g_icebergApproxFactor = 0.5;
 
 float g_earlySimStopThres = 0.01;
 
-bool g_bSubtractOneFromInput = false;
+
+bool g_bVertSubtractOne = false;
+
+
 
 /* ************************************************************* */
 
@@ -100,7 +103,7 @@ int main(int argc, char *argv[])
         string sTar = *it;
         int tar = atoi(sTar.c_str());
 
-        if (g_bSubtractOneFromInput) {
+        if (g_bVertSubtractOne) {
         	src -= 1;
         	tar -= 1;
         }
@@ -325,7 +328,7 @@ int getOptions(int argc, char* argv[])
 				g_earlySimStopThres = atof(optarg);
 				break;
 			case 'm':
-				g_bSubtractOneFromInput = true;
+				g_bVertSubtractOne = true;
 				break;
 			default:
 				std::cerr << currOpt << " is not a valid option." << std::endl;
