@@ -43,6 +43,7 @@ float g_icebergApproxFactor = 0.5;
 
 float g_earlySimStopThres = 0.01;
 
+bool g_bSubtractOneFromInput = false;
 
 /* ************************************************************* */
 
@@ -76,7 +77,7 @@ int main(int argc, char *argv[])
     ifstream fIn(sGraphFilename);
     
     
-    boost::char_separator<char> sSep(",\t");
+    boost::char_separator<char> sSep(",\t ");
     typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
             
     unordered_set<int> vUniqueVerts;
@@ -98,6 +99,12 @@ int main(int argc, char *argv[])
         ++it;
         string sTar = *it;
         int tar = atoi(sTar.c_str());
+
+        if (g_bSubtractOneFromInput) {
+        	src -= 1;
+        	tar -= 1;
+        }
+
         vSrc.push_back(src);
         vTar.push_back(tar);
 
@@ -236,19 +243,19 @@ int main(int argc, char *argv[])
     fOut << "Iteration: " << pfSim->getIterRan() << endl;
 
     // output upper diagonal, minus the diagonal, which is always 1 for all our measures
-//	for (int i = 0; i < vertNum; ++i) {
-//		for (int j = i+1; j < vertNum-1; ++j) {
-//			fOut << mSim[i + j*vertNum] << ",";
-//		}
-//		fOut << mSim[i + (vertNum-1) * vertNum] << endl;
-//	}
-
 	for (int i = 0; i < vertNum; ++i) {
-		for (int j = 0; j < vertNum-1; ++j) {
+		for (int j = i+1; j < vertNum-1; ++j) {
 			fOut << mSim[i + j*vertNum] << ",";
 		}
 		fOut << mSim[i + (vertNum-1) * vertNum] << endl;
 	}
+
+//	for (int i = 0; i < vertNum; ++i) {
+//		for (int j = 0; j < vertNum-1; ++j) {
+//			fOut << mSim[i + j*vertNum] << ",";
+//		}
+//		fOut << mSim[i + (vertNum-1) * vertNum] << endl;
+//	}
 
     fOut.close();
 
@@ -287,7 +294,7 @@ int getOptions(int argc, char* argv[])
 	/*
 	* f -
 	*/
-	const char* optString = "t:d:i:e:b:c:a:s:";
+	const char* optString = "t:d:i:e:b:c:a:s:m";
 	while ((currOpt = getopt(argc, argv, optString)) != -1) {
 		switch (currOpt) {
 			case 't':
@@ -316,6 +323,9 @@ int getOptions(int argc, char* argv[])
 				break;
 			case 's':
 				g_earlySimStopThres = atof(optarg);
+				break;
+			case 'm':
+				g_bSubtractOneFromInput = true;
 				break;
 			default:
 				std::cerr << currOpt << " is not a valid option." << std::endl;
