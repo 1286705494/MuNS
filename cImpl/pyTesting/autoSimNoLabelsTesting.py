@@ -133,15 +133,23 @@ def main():
                 csvTempOut = csv.reader(fTempOutput, delimiter=',')
                 for lRow in csvTempOut:
                     llDis.append([1-float(x) for x in lRow])
-                    if bShellAnalysis:
-                        llSim.append([float(x) for x in lRow])
+#                     if bShellAnalysis:
+                    llSim.append([float(x) for x in lRow])
+                        
+                lSim = [item for lSublist in llSim for item in lSublist]
+                rowLen = len(llSim[0])                        
+                lRank = percentileRank(lSim, simEpsilon)
+                
+                # unroll distrace matrix
+                vRank = np.array(lRank)
+                mRank = np.reshape(vRank, (rowLen, rowLen), 'F')
                                             
                 # perform k-mediods clustering
                 mDis = np.array(llDis)
                 vClusters, vMedriods = cluster(mDis, clusNum)
                 
                 # compute compactness
-                compactNess = computeCompactness(mDis, vClusters, vMedriods)
+                compactNess = computeCompactness(mRank, vClusters, vMedriods)
                 
                 # store results
                 lResults.append([sAlgorname, sInitAlgor, ioBalance, dampingFactor, runningTime, iterNum, compactNess])
@@ -166,11 +174,11 @@ def main():
                         
                         llDShells = computeDShell(gGraph, outBinNum, inBinNum)
                         
-                        lSim = [item for lSublist in llSim for item in lSublist]
-                        rowLen = len(llSim[0])
+#                         lSim = [item for lSublist in llSim for item in lSublist]
+#                         rowLen = len(llSim[0])
 #                         intraRank, interRank = avgRank(lSim, rowLen, llDShells, simEpsilon)
                         
-                        lRank = percentileRank(lSim, simEpsilon)
+#                         lRank = percentileRank(lSim, simEpsilon)
                         mIntraRank, mShellInterRank = intraCrossShellsRank(llDShells, lRank, outBinNum, inBinNum)
                         
                         print mIntraRank
