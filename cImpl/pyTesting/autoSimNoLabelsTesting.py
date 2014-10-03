@@ -93,7 +93,8 @@ def main():
         lResults = []
 
         sTempOutFile = 'temp.out'
-        sExec = '~/Programming/MuNS/cImpl/Release/cVertSim'
+#         sExec = '~/Programming/MuNS/cImpl/Release/cVertSim'
+        sExec = '~/Programming/workspace/cVertSim/cImpl/Release/cVertsim'
         
         for dampingFactor in lLambdaRange:
             lPara = [

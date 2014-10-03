@@ -130,10 +130,6 @@ AutoSim::~AutoSim()
 
 
 
-
-
-
-
 float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, int edgeNum, int vertNum) {
 	using namespace std;
 
@@ -156,8 +152,6 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
     }
 
 
-
-
     // construct neighbour list
     vector< vector<int> > vvInNeigh(vertNum);
     vector< vector<int> > vvOutNeigh(vertNum);
@@ -172,29 +166,36 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
     } // end of for
 
 
+    float* m_mVertIOBalance = NULL;
+    if (m_bCompIndividualBalance) {
+    	// compute the individual vertex IO
+    }
+
 
     // parameter b: Linear here, also can use square and Euler's
-    int srcNum = 0;
-    int snkNum = 0;
-    for (int v = 0; v < vertNum; ++v) {
-        if (vvOutNeigh[v].size() == 0 && vvInNeigh[v].size() > 0) {
-            snkNum += 1;
-        }
-        if (vvInNeigh[v].size() == 0 && vvOutNeigh[v].size() > 0) {
-            srcNum += 1;
-        }
-    }
-
-    // initialise b
     double b = 0.5;
-    if (srcNum > 0 || snkNum > 0) {
-    	b= static_cast<double>(vertNum - snkNum) / (2*vertNum - snkNum - srcNum);
-    }
+    if (!m_bUseInputBalance) {
+		int srcNum = 0;
+		int snkNum = 0;
+		for (int v = 0; v < vertNum; ++v) {
+			if (vvOutNeigh[v].size() == 0 && vvInNeigh[v].size() > 0) {
+				snkNum += 1;
+			}
+			if (vvInNeigh[v].size() == 0 && vvOutNeigh[v].size() > 0) {
+				srcNum += 1;
+			}
+		}
 
-//    cout << "b = " << b << endl;
-    if (m_bUseInputBalance) {
+		// initialise b
+
+		if (srcNum > 0 || snkNum > 0) {
+			b= static_cast<double>(vertNum - snkNum) / (2*vertNum - snkNum - srcNum);
+		}
+    }
+    else {
     	b = m_ioBalance;
     }
+
 
     // initialise similarity matrix
     if (m_bEarlySimStop) {

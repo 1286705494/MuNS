@@ -246,19 +246,19 @@ int main(int argc, char *argv[])
     fOut << "Iteration: " << pfSim->getIterRan() << endl;
 
     // output upper diagonal, minus the diagonal, which is always 1 for all our measures
-	for (int i = 0; i < vertNum; ++i) {
-		for (int j = i+1; j < vertNum-1; ++j) {
-			fOut << mSim[i + j*vertNum] << ",";
-		}
-		fOut << mSim[i + (vertNum-1) * vertNum] << endl;
-	}
-
 //	for (int i = 0; i < vertNum; ++i) {
-//		for (int j = 0; j < vertNum-1; ++j) {
+//		for (int j = i+1; j < vertNum-1; ++j) {
 //			fOut << mSim[i + j*vertNum] << ",";
 //		}
 //		fOut << mSim[i + (vertNum-1) * vertNum] << endl;
 //	}
+
+	for (int i = 0; i < vertNum; ++i) {
+		for (int j = 0; j < vertNum-1; ++j) {
+			fOut << mSim[i + j*vertNum] << ",";
+		}
+		fOut << mSim[i + (vertNum-1) * vertNum] << endl;
+	}
 
     fOut.close();
 

@@ -32,6 +32,7 @@ protected:
 	bool m_bUseInputBalance;
 	float m_ioBalance;
 
+
 	/** Use early similarity stop. */
 	bool m_bEarlySimStop;
 	float m_earlySimStopThres;
