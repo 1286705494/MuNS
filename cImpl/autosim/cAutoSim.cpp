@@ -167,7 +167,7 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 
 
     float* m_mVertIOBalance = NULL;
-    if (m_bCompIndividualBalance) {
+/*    if (m_bCompIndividualBalance) {
     	// compute the individual vertex IO
     	m_mVertIOBalance = new float[vertNum*vertNum];
     	for (int i = 0; i < vertNum; ++i) {
@@ -186,7 +186,7 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
     		m_mVertIOBalance[i + i * vertNum] = float(outDegI) / (inDegI + outDegI);
     	}
     }
-
+*/
 
     // parameter b: Linear here, also can use square and Euler's
     double b = 0.5;
