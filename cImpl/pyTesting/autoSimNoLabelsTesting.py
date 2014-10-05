@@ -75,10 +75,11 @@ def main():
     lLambdaRange = [0.9]
 #     lBetaRange = [0.5]
 #     lLambdaRange = [0.9]
-#     sInitAlgor = 'degBinaryInit'
-    sInitAlgor = 'binaryInit'
+    sInitAlgor = 'degBinaryInit'
+#     sInitAlgor = 'binaryInit'
 #     lsInit = ['degRatioInit']
-    lsAlgor = ['autosim', 'simrank', 'prank', 'rolesim', 'matchsim']
+#     lsAlgor = ['autosim', 'simrank', 'prank', 'rolesim', 'matchsim']
+    lsAlgor = ['autosim', 'vertBalAutosim', 'rolesim']
 #     lsAlgor = ['simrank']
 #     lsAlgor = ['autosim']
     
@@ -86,15 +87,15 @@ def main():
 
     for sAlgorname in lsAlgor:       
         print sAlgorname              
-        fResultOut = open(sResultsOutPrefix + '_' + sAlgorname + '.out.csv' , 'w')
+        fResultOut = open(sResultsOutPrefix + '_' + sAlgorname + '_' + sInitAlgor + '.out.csv' , 'w')
         csvResultOut = csv.writer(fResultOut, delimiter=',')               
                         
         # store results
         lResults = []
 
         sTempOutFile = 'temp.out'
-#         sExec = '~/Programming/MuNS/cImpl/Release/cVertSim'
-        sExec = '~/Programming/workspace/cVertSim/cImpl/Release/cVertsim'
+        sExec = '~/Programming/MuNS/cImpl/Release/cVertSim'
+#         sExec = '~/Programming/workspace/cVertSim/cImpl/Release/cVertsim'
         
         for dampingFactor in lLambdaRange:
             lPara = [

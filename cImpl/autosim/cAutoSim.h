@@ -32,6 +32,8 @@ protected:
 	bool m_bUseInputBalance;
 	float m_ioBalance;
 
+	/** Whether to use individual level balance. Note if this is true, m_bUseInputBalance is not considered. */
+	bool m_bCompIndividualBalance;
 
 	/** Use early similarity stop. */
 	bool m_bEarlySimStop;
@@ -54,8 +56,8 @@ public:
 //	AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor) throw(std::invalid_argument);
 //	AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor) throw(std::invalid_argument);
 
-	AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop = false, float earlySimStopThres = 0.1, bool useInputBalance = false, float ioBalance = 0.5) throw(std::invalid_argument);
-	AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop = false, float earlySimStopThres = 0.1, bool useInputBalance = false, float ioBalance = 0.5) throw(std::invalid_argument);
+	AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop = false, float earlySimStopThres = 0.1, bool useInputBalance = false, float ioBalance = 0.5, float m_bCompIndividualBalance = false) throw(std::invalid_argument);
+	AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop = false, float earlySimStopThres = 0.1, bool useInputBalance = false, float ioBalance = 0.5, float m_bCompIndividualBalance = false) throw(std::invalid_argument);
 
 	virtual ~AutoSim();
 

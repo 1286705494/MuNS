@@ -82,21 +82,23 @@ def main():
     
     
     
-#     lLambdaRange = [0.1, 0.3, 0.5, 0.7, 0.9]
-    lLambdaRange = [0.9]
+#     lLambdaRange = [0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 1.0]
+    lLambdaRange = [0.8, 0.9, 0.95, 1.0]
+#     lLambdaRange = [0.95]
 #     lBetaRange = [0.5]
 #     lLambdaRange = [0.9]
-    sInitAlgor = 'binaryInit'
+#     sInitAlgor = 'binaryInit'
 #     sInitAlgor = 'degRatioInit'
-    ioBalance = 0.1
-#     sInitAlgor = 'degBinaryInit'
+    ioBalance = 0.5
+    sInitAlgor = 'degBinaryInit'
 #     lsAlgor = ['autosim', 'rolesim', 'matchsim', 'simrank', 'prank']
 #     lsAlgor = ['autosim', 'rolesim']
 #     lsAlgor = ['icebergAutosim', 'earlyStopAutosim', 'icebergEarlyStopAutosim']
 #     lsAlgor = ['earlyStopAutosim']
 #     lsAlgor = ['icebergEarlyStopAutosim']
+    lsAlgor = ['rolesim']
 #     lsAlgor = ['simrank']
-    lsAlgor = ['autosim']
+#     lsAlgor = ['autosim', 'vertBalAutosim']
     
     
     gGraph = nx.DiGraph()

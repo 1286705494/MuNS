@@ -162,13 +162,23 @@ int main(int argc, char *argv[])
     else if (strcmp(sMeasure, "autosim") == 0) {
     	// not using earlyStop
     	if (g_bUseConvEpsilon) {
-    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance);
+    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, false);
     	}
     	// not using convergence epsilon
     	else {
-    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance);
+    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, false);
     	}
     }
+    else if (strcmp(sMeasure, "vertBalAutosim") == 0) {
+        	// not using earlyStop
+        	if (g_bUseConvEpsilon) {
+        		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true);
+        	}
+        	// not using convergence epsilon
+        	else {
+        		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_initAlgorName, false, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true);
+        	}
+        }
     else if (strcmp(sMeasure, "earlyStopAutosim") == 0) {
 //    	if (g_bUseConvEpsilon) {
 //    		pfSim = new AutoSim(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance);

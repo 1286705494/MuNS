@@ -59,8 +59,8 @@ inline int index(int r, int c, int vertNum) { return r < c ? r + c * vertNum : c
 
 
 
-AutoSim::AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance) throw(std::invalid_argument)
-	: DampedSimilarity(dampingFactor, maxIter), m_pfInitAlgor(NULL), m_bUseInputBalance(useInputBalance), m_ioBalance(ioBalance), m_bEarlySimStop(earlySimStop), m_earlySimStopThres(earlySimStopThres)
+AutoSim::AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float bCompIndividualBalance) throw(std::invalid_argument)
+	: DampedSimilarity(dampingFactor, maxIter), m_pfInitAlgor(NULL), m_bUseInputBalance(useInputBalance), m_ioBalance(ioBalance), m_bCompIndividualBalance(bCompIndividualBalance), m_bEarlySimStop(earlySimStop), m_earlySimStopThres(earlySimStopThres)
 {
 //	// override default constructor
 //	m_bUseInputBalance = true;
@@ -80,8 +80,8 @@ AutoSim::AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor
 } // end of AutoSim()
 
 
-AutoSim::AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres,  bool useInputBalance, float ioBalance) throw(std::invalid_argument)
-	: DampedSimilarity(dampingFactor, maxIter, convEpsilon), m_pfInitAlgor(NULL), m_bUseInputBalance(useInputBalance), m_ioBalance(ioBalance), m_bEarlySimStop(earlySimStop), m_earlySimStopThres(earlySimStopThres)
+AutoSim::AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres,  bool useInputBalance, float ioBalance, float bCompIndividualBalance) throw(std::invalid_argument)
+	: DampedSimilarity(dampingFactor, maxIter, convEpsilon), m_pfInitAlgor(NULL), m_bUseInputBalance(useInputBalance), m_ioBalance(ioBalance), m_bCompIndividualBalance(bCompIndividualBalance), m_bEarlySimStop(earlySimStop), m_earlySimStopThres(earlySimStopThres)
 {
 //	// override default constructor
 //	m_bUseInputBalance = true;
@@ -169,6 +169,22 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
     float* m_mVertIOBalance = NULL;
     if (m_bCompIndividualBalance) {
     	// compute the individual vertex IO
+    	m_mVertIOBalance = new float[vertNum*vertNum];
+    	for (int i = 0; i < vertNum; ++i) {
+    		int inDegI = vvInNeigh[i].size();
+    		int outDegI = vvOutNeigh[i].size();
+
+    		for (int j = i+1; j < vertNum; ++j) {
+    			int inDegJ = vvInNeigh[j].size();
+    			int outDegJ = vvOutNeigh[j].size();
+
+    			m_mVertIOBalance[i + j * vertNum] = float(outDegI + outDegJ) / (inDegI + inDegJ + outDegI + outDegJ);
+    			m_mVertIOBalance[j + i * vertNum] = m_mVertIOBalance[i + j * vertNum];
+    		}
+
+    		// diagonal
+    		m_mVertIOBalance[i + i * vertNum] = float(outDegI) / (inDegI + outDegI);
+    	}
     }
 
 
@@ -318,7 +334,13 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
                         mTempCurrSim[i + j*vertNum] = inMatchCost * m_dampingFactor + 1 - m_dampingFactor;
                     }
                     else {
-                    	mTempCurrSim[i + j*vertNum] = m_dampingFactor * ((1-b)*inMatchCost+ b*outMatchCost) + 1 - m_dampingFactor;
+                    	if (m_bCompIndividualBalance) {
+                    		float beta = m_mVertIOBalance[i+j*vertNum];
+                    		mTempCurrSim[i + j*vertNum] = m_dampingFactor * ((1-beta)*inMatchCost+ beta * outMatchCost) + 1 - m_dampingFactor;
+                    	}
+                    	else {
+                    		mTempCurrSim[i + j*vertNum] = m_dampingFactor * ((1-b)*inMatchCost+ b*outMatchCost) + 1 - m_dampingFactor;
+                    	}
                     }
                 }
                 // assign the other symmetric similarity
