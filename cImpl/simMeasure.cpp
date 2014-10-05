@@ -13,6 +13,7 @@
 #include "rolesim/cRoleSim.h"
 #include "simrank/cSimRank.h"
 #include "prank/cPRank.h"
+#include "rege/cRege.h"
 #include "matchsim/cMatchSim.h"
 #include "matching/BMatching.h"
 #include "timer/TimerHandler.h"
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
     list<int> vSrc;
     list<int> vTar;
     
+
     string sLine;
     while(getline(fIn, sLine)) {
     	// we ignore lines that start with '#'
@@ -158,6 +160,14 @@ int main(int argc, char *argv[])
     	else {
     		pfSim = new RoleSim(g_dampingFactor, g_iterInfo, g_initAlgorName);
     	}
+    }
+    else if (strcmp(sMeasure, "rege") == 0) {
+    	if (g_bUseConvEpsilon) {
+			pfSim = new Rege(g_iterInfo, g_convEpsilon);
+		}
+		else {
+			pfSim = new Rege(g_iterInfo);
+		}
     }
     else if (strcmp(sMeasure, "autosim") == 0) {
     	// not using earlyStop
