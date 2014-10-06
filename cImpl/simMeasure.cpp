@@ -14,9 +14,11 @@
 #include "simrank/cSimRank.h"
 #include "prank/cPRank.h"
 #include "rege/cRege.h"
+#include "rege/cRegeImplOpti.h"
 #include "matchsim/cMatchSim.h"
 #include "matching/BMatching.h"
 #include "timer/TimerHandler.h"
+#include "randGraph/randGraph.h"
 
 /* ******************************************************** */
 
@@ -46,6 +48,8 @@ float g_earlySimStopThres = 0.01;
 
 
 bool g_bVertSubtractOne = false;
+
+int g_randGraphVertNum = 0;
 
 
 
@@ -77,6 +81,10 @@ int main(int argc, char *argv[])
     char* sSimOutFilename = argv[nextOptIndex+2];
     
 
+    if (g_randGraphVertNum) {
+    	unifDistGraph(sGraphFilename, g_randGraphVertNum, g_randGraphVertNum * 2);
+    }
+
     // Read in file
     ifstream fIn(sGraphFilename);
     
@@ -84,7 +92,8 @@ int main(int argc, char *argv[])
     boost::char_separator<char> sSep(",\t ");
     typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
             
-    unordered_set<int> vUniqueVerts;
+//	unordered_set<int> vUniqueVerts;
+    int vertNum = 0;
 
     list<int> vSrc;
     list<int> vTar;
@@ -113,14 +122,19 @@ int main(int argc, char *argv[])
         vSrc.push_back(src);
         vTar.push_back(tar);
 
-        vUniqueVerts.insert(src);
-        vUniqueVerts.insert(tar);
+        if (vertNum < src + 1)
+        	vertNum = src + 1;
+        if (vertNum < tar + 1)
+           	vertNum = tar + 1;
+
+//		vUniqueVerts.insert(src);
+//		vUniqueVerts.insert(tar);
     }
     
     fIn.close();
 
     // number of vertices
-    int vertNum = vUniqueVerts.size();
+//	int vertNum = vUniqueVerts.size();
 
 #ifdef _TIMING_ALGOR_
     // start timer
@@ -169,6 +183,14 @@ int main(int argc, char *argv[])
 			pfSim = new Rege(g_iterInfo);
 		}
     }
+    else if (strcmp(sMeasure, "regeImplOpti") == 0) {
+		if (g_bUseConvEpsilon) {
+			pfSim = new RegeImplOpti(g_iterInfo, g_convEpsilon);
+		}
+		else {
+			pfSim = new RegeImplOpti(g_iterInfo);
+		}
+	}
     else if (strcmp(sMeasure, "autosim") == 0) {
     	// not using earlyStop
     	if (g_bUseConvEpsilon) {
@@ -317,7 +339,7 @@ int getOptions(int argc, char* argv[])
 	/*
 	* f -
 	*/
-	const char* optString = "t:d:i:e:b:c:a:s:m";
+	const char* optString = "t:d:i:e:b:c:a:s:r:m";
 	while ((currOpt = getopt(argc, argv, optString)) != -1) {
 		switch (currOpt) {
 			case 't':
@@ -346,6 +368,9 @@ int getOptions(int argc, char* argv[])
 				break;
 			case 's':
 				g_earlySimStopThres = atof(optarg);
+				break;
+			case 'r':
+				g_randGraphVertNum = atoi(optarg);
 				break;
 			case 'm':
 				g_bVertSubtractOne = true;

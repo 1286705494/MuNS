@@ -53,8 +53,8 @@ protected:
 
 public:
 
-//	AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor) throw(std::invalid_argument);
-//	AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor) throw(std::invalid_argument);
+	AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor) throw(std::invalid_argument);
+	AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor) throw(std::invalid_argument);
 
 	AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop = false, float earlySimStopThres = 0.1, bool useInputBalance = false, float ioBalance = 0.5, float m_bCompIndividualBalance = false) throw(std::invalid_argument);
 	AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop = false, float earlySimStopThres = 0.1, bool useInputBalance = false, float ioBalance = 0.5, float m_bCompIndividualBalance = false) throw(std::invalid_argument);
