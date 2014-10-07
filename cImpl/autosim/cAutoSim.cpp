@@ -22,40 +22,40 @@ inline int index(int r, int c, int vertNum) { return r < c ? r + c * vertNum : c
 
 
 
-//AutoSim::AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor) throw(std::invalid_argument)
-//	: DampedSimilarity(dampingFactor, maxIter), m_pfInitAlgor(NULL), m_bUseInputBalance(false), m_ioBalance(0.5)
-//{
-//	if (sInitAlgor == "binaryInit") {
-//		m_pfInitAlgor = new BinaryInitAlgor(dampingFactor);
-//	}
-//	else if (sInitAlgor == "degBinaryInit") {
-//		m_pfInitAlgor = new DegBinaryInitAlgor(dampingFactor);
-//	}
-//	else if (sInitAlgor == "degRatioInit") {
-//		m_pfInitAlgor = new DegRatioInitAlgor(dampingFactor);
-//	}
-//	else {
-//		throw std::invalid_argument("AutoSim: invalid initialisation algorithm");
-//	}
-//} // end of AutoSim()
-//
-//
-//AutoSim::AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor) throw(std::invalid_argument)
-//	: DampedSimilarity(dampingFactor, maxIter, convEpsilon), m_pfInitAlgor(NULL), m_bUseInputBalance(false), m_ioBalance(0.5)
-//{
-//	if (sInitAlgor == "binaryInit") {
-//		m_pfInitAlgor = new BinaryInitAlgor(dampingFactor);
-//	}
-//	else if (sInitAlgor == "degBinaryInit") {
-//		m_pfInitAlgor = new DegBinaryInitAlgor(dampingFactor);
-//	}
-//	else if (sInitAlgor == "degRatioInit") {
-//		m_pfInitAlgor = new DegRatioInitAlgor(dampingFactor);
-//	}
-//	else {
-//		throw std::invalid_argument("AutoSim: invalid initialisation algorithm");
-//	}
-//}
+AutoSim::AutoSim(float dampingFactor, int maxIter, const std::string& sInitAlgor) throw(std::invalid_argument)
+	: DampedSimilarity(dampingFactor, maxIter), m_pfInitAlgor(NULL), m_bUseInputBalance(false), m_ioBalance(0.5)
+{
+	if (sInitAlgor == "binaryInit") {
+		m_pfInitAlgor = new BinaryInitAlgor(dampingFactor);
+	}
+	else if (sInitAlgor == "degBinaryInit") {
+		m_pfInitAlgor = new DegBinaryInitAlgor(dampingFactor);
+	}
+	else if (sInitAlgor == "degRatioInit") {
+		m_pfInitAlgor = new DegRatioInitAlgor(dampingFactor);
+	}
+	else {
+		throw std::invalid_argument("AutoSim: invalid initialisation algorithm");
+	}
+} // end of AutoSim()
+
+
+AutoSim::AutoSim(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor) throw(std::invalid_argument)
+	: DampedSimilarity(dampingFactor, maxIter, convEpsilon), m_pfInitAlgor(NULL), m_bUseInputBalance(false), m_ioBalance(0.5)
+{
+	if (sInitAlgor == "binaryInit") {
+		m_pfInitAlgor = new BinaryInitAlgor(dampingFactor);
+	}
+	else if (sInitAlgor == "degBinaryInit") {
+		m_pfInitAlgor = new DegBinaryInitAlgor(dampingFactor);
+	}
+	else if (sInitAlgor == "degRatioInit") {
+		m_pfInitAlgor = new DegRatioInitAlgor(dampingFactor);
+	}
+	else {
+		throw std::invalid_argument("AutoSim: invalid initialisation algorithm");
+	}
+}
 
 
 
@@ -169,26 +169,26 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 
 
     float* m_mVertIOBalance = NULL;
-/*    if (m_bCompIndividualBalance) {
-    	// compute the individual vertex IO
-    	m_mVertIOBalance = new float[vertNum*vertNum];
-    	for (int i = 0; i < vertNum; ++i) {
-    		int inDegI = vvInNeigh[i].size();
-    		int outDegI = vvOutNeigh[i].size();
+//    if (m_bCompIndividualBalance) {
+//    	// compute the individual vertex IO
+//    	m_mVertIOBalance = new float[vertNum*vertNum];
+//    	for (int i = 0; i < vertNum; ++i) {
+//    		int inDegI = vvInNeigh[i].size();
+//    		int outDegI = vvOutNeigh[i].size();
+//
+//    		for (int j = i+1; j < vertNum; ++j) {
+//    			int inDegJ = vvInNeigh[j].size();
+//    			int outDegJ = vvOutNeigh[j].size();
+//
+//    			m_mVertIOBalance[i + j * vertNum] = float(outDegI + outDegJ) / (inDegI + inDegJ + outDegI + outDegJ);
+//    			m_mVertIOBalance[j + i * vertNum] = m_mVertIOBalance[i + j * vertNum];
+//    		}
+//
+//    		// diagonal
+//    		m_mVertIOBalance[i + i * vertNum] = float(outDegI) / (inDegI + outDegI);
+//    	}
+//    }
 
-    		for (int j = i+1; j < vertNum; ++j) {
-    			int inDegJ = vvInNeigh[j].size();
-    			int outDegJ = vvOutNeigh[j].size();
-
-    			m_mVertIOBalance[i + j * vertNum] = float(outDegI + outDegJ) / (inDegI + inDegJ + outDegI + outDegJ);
-    			m_mVertIOBalance[j + i * vertNum] = m_mVertIOBalance[i + j * vertNum];
-    		}
-
-    		// diagonal
-    		m_mVertIOBalance[i + i * vertNum] = float(outDegI) / (inDegI + outDegI);
-    	}
-    }
-*/
 
     // parameter b: Linear here, also can use square and Euler's
     double b = 0.5;

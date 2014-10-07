@@ -10,6 +10,8 @@
 
 #include "../similarity/dampedSimilarity.h"
 
+using namespace std;
+
 #ifndef CREGE_H_
 #define CREGE_H_
 
@@ -30,6 +32,7 @@ public:
 
 	virtual float* computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, int edgeNum, int vertNum);
 
+	void loopOverNeigh(int i, int j, float* mPrevSim, float* mCurrSim, int vertNum, vector< vector<int> > vvNeigh);
 
 };
 

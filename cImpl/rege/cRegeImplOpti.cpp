@@ -1,5 +1,5 @@
 /*
- * cRege.cpp
+ * cRegeImplOpti.cpp
  *
  *  Created on: 05/10/2014
  *      Author: youhan
@@ -12,55 +12,64 @@
 #include <cassert>
 #include <cmath>
 
-#include "cRege.h"
+#include "cRegeImplOpti.h"
 #include "../utils/matUtils.h"
 
 #define ITER typename vector<int>::const_iterator
 
 using namespace std;
 
-//inline int index(int r, int c, int vertNum) { return r < c ? r + c * vertNum : c + r * vertNum; }
+//inline int RegeImplOpti::index(int r, int c, int vertNum) { return r < c ? r + c * vertNum : c + r * vertNum; }
 
-void Rege::loopOverNeigh(int i, int j, float* mPrevSim, float* mCurrSim, int vertNum, vector< vector<int> > vvNeigh)
+inline int RegeImplOpti::index(int a, int b, int vertNum)
 {
+	int sum = a + b;
+	int diff = abs(a - b);
+	int c2 = (sum + diff);
+	int r2 = (sum - diff);
+	return ((c2 * (c2 + 2)) / 4 + r2) / 2;
+}
+
+void RegeImplOpti::loopOverNeigh(int i, int j, float* mPrevSim, float* mCurrSim_i_j, int vertNum, vector< vector<int> > vvNeigh)
+{
+
 	if (vvNeigh[i].size() == 0 || vvNeigh[j].size() == 0) return;
 	for (ITER kit = vvNeigh[i].begin(); kit != vvNeigh[i].end(); ++kit) {
-		ITER lmax = vvNeigh[j].begin();
-		for (ITER lit = vvNeigh[j].begin(); lit != vvNeigh[j].end(); ++lit) {
-			if (mPrevSim[*kit + *lmax * vertNum] < mPrevSim[*kit + *lit * vertNum])
-				lmax = lit;
+		ITER lit = vvNeigh[j].begin();
+		int lmax = index(*kit, *lit, vertNum);
+		for (; lit != vvNeigh[j].end(); ++lit) {
+			if (mPrevSim[lmax] < mPrevSim[index(*kit, *lit, vertNum)])
+				lmax = index(*kit, *lit, vertNum);
 		} // end of inner for
-		mCurrSim[i + j * vertNum] += mPrevSim[*kit + *lmax * vertNum];
-//		cout << i << "->" << *kit << " == " << j << "->" << *lmax << " in " << mPrevSim[*kit + *lmax * vertNum] << endl;
-//		cout << "support[" << i << "][" << j <<"] == " << mCurrSim << endl;
-//		cin.ignore();
+		*mCurrSim_i_j += mPrevSim[lmax];
 	} // end of outer for
 
 }
 
-Rege::Rege(int maxIter)
+RegeImplOpti::RegeImplOpti(int maxIter)
 	: IterSimilarity(maxIter)
 {
 } // end of Rege()
 
 
-Rege::Rege(int maxIter, float convEpsilon)
+RegeImplOpti::RegeImplOpti(int maxIter, float convEpsilon)
 	: IterSimilarity(maxIter, convEpsilon)
 {
 } // end of Rege()
 
-Rege::~Rege()
+RegeImplOpti::~RegeImplOpti()
 {
 }
 
 
-float* Rege::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, int edgeNum, int vertNum)
+float* RegeImplOpti::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, int edgeNum, int vertNum)
 {
 
+	int mSize = (vertNum + 1) * vertNum / 2;
 
 	// similarity matrix (column-major, and we only store the upper triangle, minus the diagonal (self-similarities, which is always 1)
-	float* mPrevSim = new float[vertNum*vertNum];
-	float* mCurrSim = new float[vertNum*vertNum];
+	float* mPrevSim = new float[mSize];
+	float* mCurrSim = new float[mSize];
 
 	// construct neighbour list
 	vector< vector<int> > vvInNeigh(vertNum);
@@ -76,16 +85,14 @@ float* Rege::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, 
 
 	// initialise the values of simRank
 	// all to 1
-	for (int r = 0; r < vertNum; ++r) {
-		for (int c = 0; c < vertNum; ++c) {
+	for (int i = 0; i < mSize; ++i) {
 			// no need to use index() as r always < c)
-			mPrevSim[r + c*vertNum] = 1;
-		}
+			mPrevSim[i] = 1;
 	}
 
 	// diagonals to 1 (since this isn't updated afterwards)
 	for (int i = 0; i < vertNum; ++i) {
-		mCurrSim[i + i * vertNum]  = 1;
+		mCurrSim[index(i, i, vertNum)]  = 1;
 	}
 
 	// perform loop iterations
@@ -97,22 +104,18 @@ float* Rege::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, 
 		// loop through all upper non-diagonal pairs
 		for (int i = 0; i < vertNum; ++i) {
 			for (int j = i+1; j < vertNum; ++j) {
+				int index_i_j = index(i, j, vertNum);
 
-				mCurrSim[i + j * vertNum] = 0;
-				mCurrSim[j + i * vertNum] = 0;
+				mCurrSim[index_i_j] = 0;
 
 				// loop over the neighbours
-				loopOverNeigh(i, j, mPrevSim, mCurrSim, vertNum, vvInNeigh);
-				loopOverNeigh(i, j, mPrevSim, mCurrSim, vertNum, vvOutNeigh);
-				loopOverNeigh(j, i, mPrevSim, mCurrSim, vertNum, vvInNeigh);
-				loopOverNeigh(j, i, mPrevSim, mCurrSim, vertNum, vvOutNeigh);
+				loopOverNeigh(i, j, mPrevSim, mCurrSim + index_i_j, vertNum, vvInNeigh);
+				loopOverNeigh(i, j, mPrevSim, mCurrSim + index_i_j, vertNum, vvOutNeigh);
+				loopOverNeigh(j, i, mPrevSim, mCurrSim + index_i_j, vertNum, vvInNeigh);
+				loopOverNeigh(j, i, mPrevSim, mCurrSim + index_i_j, vertNum, vvOutNeigh);
 
-//				cout << "m[" << i << "][" <<  j << "] = " << mCurrSim[i + j * vertNum] <<" / " << vvInNeigh[i].size() + vvOutNeigh[i].size() + vvInNeigh[j].size() + vvOutNeigh[j].size() << endl;
-//				cin.ignore();
 
-				mCurrSim[i + j * vertNum] += mCurrSim[j + i * vertNum];
-				mCurrSim[i + j * vertNum] /= vvInNeigh[i].size() + vvOutNeigh[i].size() + vvInNeigh[j].size() + vvOutNeigh[j].size();
-				mCurrSim[j + i * vertNum] = mCurrSim[i + j * vertNum];
+				mCurrSim[index_i_j] /= vvInNeigh[i].size() + vvOutNeigh[i].size() + vvInNeigh[j].size() + vvOutNeigh[j].size();
 
 			} // end of inner for
 		} // end of outer for
@@ -140,14 +143,6 @@ float* Rege::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, 
 			}
 		}
 
-//		for (int i = 0; i < vertNum ; ++i){
-//			for (int j = 0; j < vertNum; ++j){
-//				cout << fixed << setw(5) << setprecision(3) << mCurrSim[i + j * vertNum] << ' ';
-//			}
-//			cout <<endl;
-//		}
-
-
 		// swap the sim matrices so we do not need to allocate more matrices then need to be
 		mTempSim = mCurrSim;
 		mCurrSim = mPrevSim;
@@ -155,7 +150,18 @@ float* Rege::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, 
 
 	} // end of loop through iterations
 	// destroy dynamically allocated memory
+
 	delete[] mCurrSim;
 
-	return mPrevSim;
+	float * mReturn = new float[vertNum * vertNum];
+
+	for (int i = 0; i < vertNum; ++i) {
+		for (int j = 0; j < vertNum; ++j) {
+			mReturn[i * vertNum + j] = mPrevSim[index(i, j, vertNum)];
+		}
+	}
+
+	delete[] mPrevSim;
+
+	return mReturn;
 }
