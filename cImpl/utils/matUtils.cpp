@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <vector>
 #include <cmath>
 #include <cassert>
 
@@ -47,3 +48,7 @@ void matChange(const float* const mMat1, const float* const mMat2, int rowNum, i
 	}
 
 } // end of matChange()
+
+
+
+

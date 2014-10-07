@@ -45,6 +45,10 @@ protected:
 	std::vector<float> m_vSimDelta;
 #endif
 
+#ifdef _COLLECT_EARLYSTOP_STATS_
+	std::vector<int> m_iterConverged;
+#endif
+
 public:
 
 	IterSimilarity(int maxIter);
@@ -63,6 +67,13 @@ public:
 
 #ifdef _COLLECT_SIM_DELTA_
 	virtual const std::vector<float>& getSimDelta() const;
+#endif
+
+#ifdef _COLLECT_EARLYSTOP_STATS_
+
+	void matIteration(const float* const mMat1, const float* const mMat2, int rowNum, int colNum, float stopThreshold, int currIter);
+
+	const std::vector<int>& getIterConverged() const;
 #endif
 };
 
@@ -87,6 +98,8 @@ public:
 	virtual ~DampedSimilarity();
 
 	void setDampingFactor(float dampingFactor);
+
+
 
 };
 

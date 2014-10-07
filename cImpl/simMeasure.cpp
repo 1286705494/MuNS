@@ -253,6 +253,22 @@ int main(int argc, char *argv[])
 #endif
 
 
+#ifdef _COLLECT_EARLYSTOP_STATS_
+    // aggregate the statistics
+    std::vector<int> vIterCount(pfSim->getIterRan(), 0);
+    const std::vector<int>& mIterStopped = pfSim->getIterConverged();
+    for (int i = 0; i < vertNum; ++i) {
+    	for (int j = i+1; j < vertNum; ++j) {
+    		++vIterCount[mIterStopped[i + j*vertNum]];
+    	}
+    }
+
+    for (typename std::vector<int>::const_iterator vit = vIterCount.begin(); vit != vIterCount.end(); ++vit) {
+    	fOut << *vit << ", ";
+    }
+    fOut << endl;
+#endif
+
 
     // if we are collecting total running time information
 #ifdef _TIMING_ALGOR_
@@ -292,6 +308,8 @@ int main(int argc, char *argv[])
     }
     cout << endl;
 #endif
+
+
 
     // release memory from roleSim2()
     delete[] mSim;

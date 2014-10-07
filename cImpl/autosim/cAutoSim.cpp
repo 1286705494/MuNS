@@ -130,6 +130,8 @@ AutoSim::~AutoSim()
 
 
 
+
+
 float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, int edgeNum, int vertNum) {
 	using namespace std;
 
@@ -229,6 +231,15 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
     int changedMatchingNum = 0;
 #endif
 
+
+#ifdef _COLLECT_EARLYSTOP_STATS_
+    m_iterConverged.resize(vertNum * vertNum);
+    for (int i = 0; i < vertNum; ++i) {
+    	for (int j = i+1; j < vertNum; ++j) {
+    		m_iterConverged[i + j*vertNum] = 0;
+    	}
+    }
+#endif
 
     // temporary structure for mIn and mOut
     vector<float> mIn(vertNum * vertNum);
@@ -382,6 +393,24 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 #endif
 
 
+#ifdef _COLLECT_EARLYSTOP_STATS_
+
+        	matIteration(*pmPrevSim, *pmCurrSim, vertNum, vertNum,  m_earlySimStopThres, t);
+
+//        	for (std::vector<int>::const_iterator vit = m_iterConverged.begin(); vit != m_iterConverged.end(); ++vit) {
+//        		cout << *vit << endl;
+//        	}
+//            for (int i = 0; i < vertNum; ++i) {
+//            	for (int j = i+1; j < vertNum; ++j) {
+//            		cout << m_iterConverged[i + j*vertNum] << endl;
+//            	}
+//            }
+
+
+
+#endif
+
+
 
         if (m_bEarlySimStop && t > 1) {
         	matChange(*pmPrevSim, *pmCurrSim, vertNum, vertNum, mbCompEntry, m_earlySimStopThres);
@@ -405,6 +434,9 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
         pmPrevSim = pmCurrSim;
         pmCurrSim = pmTempSim;
     } // end of loop through iterations
+
+
+
 
     // destroy dynamically allocated memory
     delete[] *pmPrevSim;

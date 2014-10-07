@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <cassert>
+#include <cmath>
 #include "dampedSimilarity.h"
 
 
@@ -60,6 +61,33 @@ const std::vector<float>& IterSimilarity::getSimDelta() const
 
 #endif
 
+
+#ifdef _COLLECT_EARLYSTOP_STATS_
+
+void IterSimilarity::matIteration(const float* const mMat1, const float* const mMat2, int rowNum, int colNum, float stopThreshold, int currIter)
+{
+	// symmetric, so don't need to update
+	for (int r = 0; r < colNum; ++r) {
+		for (int c = r+1; c < rowNum; ++c) {
+//			std::cout << mMat1[r + c*rowNum] << " - " << mMat2[r + c*rowNum] << " = " << fabs(mMat1[r + c*rowNum] - mMat2[r + c*rowNum]) << std::endl;
+//			std::cout << stopThreshold << std::endl;
+
+			// if the entry is something we are still computing and the difference is now at or less than stopThreshold, we should not compute it
+			if (fabs(mMat1[r + c*rowNum] - mMat2[r + c*rowNum]) > stopThreshold) {
+//				std::cout << "update with " << currIter << std::endl;
+				m_iterConverged[r + c * rowNum] = currIter;
+			}
+		}
+	}
+} // end of matIteration()
+
+
+const std::vector<int>& IterSimilarity::getIterConverged() const
+{
+	return m_iterConverged;
+} // end of getIterConverged()
+
+#endif
 
 /* **************************************************** */
 

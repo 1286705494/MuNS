@@ -5,6 +5,7 @@
  *      Author: jefcha
  */
 
+#include <vector>
 #include "pairUtils.h"
 
 #ifndef MATUTILS_H_
@@ -25,7 +26,6 @@ float l1MatDiff(const float* const mMat1, const float* const mMat2, int rowNum, 
  */
 extern
 void matChange(const float* const mMat1, const float* const mMat2, int rowNum, int colNum, bool* mbCompEntry, float stopThreshold);
-
 
 
 

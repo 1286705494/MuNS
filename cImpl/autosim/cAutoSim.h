@@ -64,6 +64,8 @@ public:
 
 	virtual float* computeSim(const std::list<int>& vSrc, const std::list<int>& vTar, int edgeNum, int vertNum);
 
+
+
 protected:
 
 	bool compareMatching(const std::vector<int>& currM1, const std::vector<int>& currM2, const std::vector<int>& prevM1, const std::vector<int>& prevM2);
