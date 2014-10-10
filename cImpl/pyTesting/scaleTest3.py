@@ -47,13 +47,12 @@ def main():
             sys.exit(2)    
     
     # check number of arguments
-    if len(remainArgs) != 4:
+    if len(remainArgs) != 3:
         usage(sys.argv[0])
     
     sGraphDir = remainArgs[0]    
     sGraphFileExt = remainArgs[1]
-    sResultsDir = remainArgs[2]
-    sResultsOutPrefix = remainArgs[3]
+    sResultsOutPrefix = remainArgs[2]
 
     
     
@@ -63,7 +62,6 @@ def main():
 #     lLambdaRange = [0.9]
     sInitAlgor = 'degBinaryInit'
 #     lsInit = ['degRatioInit']
-    sOrigAlgor = 'autosim'
     lsAlgor = ['icebergAutosim']   
 #     lsAlgor = ['icebergEarlyStopAutosim']
     defaultIcebergThes = 0.01
@@ -72,13 +70,14 @@ def main():
     
 #     lEarlyStopThres = [0.005, 0.01, 0.03, 0.05, 0.1]
     lEarlyStopThres = [0.1]
-    lIcebergThres = [0.95, 0.9, 0.8, 0.7]
+#     lIcebergThres = [0.95, 0.9, 0.8, 0.7]
+    lIcebergThres = [0.9, 0.95]
 #     lIcebergAlpha = [0.1, 0.3, 0.5, 0.7, 0.9]
     lIcebergAlpha = [0.3]
     
     
 #     lSizes = [500, 1000, 2000, 5000]
-    lSizes = [10000]
+    lSizes = [25000, 50000]
 #     lSizes = [1000, 2000, 5000]
 #     lSizes = [500]
 
@@ -128,43 +127,15 @@ def main():
             
             print sGraphFile
             
-            # load the original results
-            sCurrResultsDir = os.path.join(sResultsDir, str(graphSize))
-            lResultsFiles = glob.glob(os.path.join(sCurrResultsDir, '*_' + sGraphFile[0:-extLen] + '_*'))
-            assert(len(lResultsFiles) == 1)
-            sOrigResultFile = lResultsFiles[0]
-            
-            print sOrigResultFile
-            
-            lOrigSim = [];
-            origIterNum = 20
-            with open(sOrigResultFile, 'r') as fOrig:
-                # read in first two rows
-                sLine = fOrig.readline()
-                lTokens = sLine.split(':')
-                runningTime = float(lTokens[1])
-                    
-                sLine = fOrig.readline()
-                lTokens = sLine.split(':')
-                origIterNum = int(lTokens[1])                        
-                    
-                # read in similarity matrix
-                csvOrig = csv.reader(fOrig, delimiter=',')
-                for lRow in csvOrig:
-                    lOrigSim.extend([float(x) for x in lRow])
-                            
-            assert(len(lOrigSim) > 0)
-            
-            
             for (i,sAlgorname) in enumerate(lsAlgor):
                 print sAlgorname
                 
                 if sAlgorname == 'earlyStopAutosim':
-                    testParas(sExec, hllResults, g, sAlgorname,  origIterNum, sInitAlgor, dampingFactor, sCurrGraphDir, sGraphFile[0:-extLen], sGraphFileExt, sResultsOutPrefix, defaultIcebergThes, defaultAlpha, defaultEarlyStopThres, lOrigSim, lEarlyStopThres)
+                    testParas(sExec, hllResults, g, sAlgorname,  maxIter, sInitAlgor, dampingFactor, sCurrGraphDir, sGraphFile[0:-extLen], sGraphFileExt, sResultsOutPrefix, defaultIcebergThes, defaultAlpha, defaultEarlyStopThres, lEarlyStopThres)
                 elif sAlgorname == 'icebergAutosim':
-                    testParas(sExec, hllResults, g, sAlgorname,  origIterNum, sInitAlgor, dampingFactor, sCurrGraphDir, sGraphFile[0:-extLen], sGraphFileExt, sResultsOutPrefix, defaultIcebergThes, defaultAlpha, defaultEarlyStopThres, lOrigSim, lIcebergThres, lIcebergAlpha)
+                    testParas(sExec, hllResults, g, sAlgorname,  maxIter, sInitAlgor, dampingFactor, sCurrGraphDir, sGraphFile[0:-extLen], sGraphFileExt, sResultsOutPrefix, defaultIcebergThes, defaultAlpha, defaultEarlyStopThres, lIcebergThres, lIcebergAlpha)
                 elif sAlgorname == 'icebergEarlyStopAutosim':
-                    testParas(sExec, hllResults, g, sAlgorname,  origIterNum, sInitAlgor, dampingFactor, sCurrGraphDir, sGraphFile[0:-extLen], sGraphFileExt, sResultsOutPrefix, defaultIcebergThes, defaultAlpha, defaultEarlyStopThres, lOrigSim, lEarlyStopThres, lIcebergThres, lIcebergAlpha)
+                    testParas(sExec, hllResults, g, sAlgorname,  maxIter, sInitAlgor, dampingFactor, sCurrGraphDir, sGraphFile[0:-extLen], sGraphFileExt, sResultsOutPrefix, defaultIcebergThes, defaultAlpha, defaultEarlyStopThres, lEarlyStopThres, lIcebergThres, lIcebergAlpha)
  
         # write out results
         with open(sResultsOutPrefix + '_' + str(graphSize) + '.out.csv' , 'w') as fResultOut:
@@ -202,7 +173,7 @@ def main():
 
 ######################################################################
 
-def testParas(sExec, hllResults, graphIndex, sAlgorname, origIterNum, sInitAlgor, dampingFactor, sCurrGraphDir, sGraphFile, sExt, sResultsOutPrefix,   defaultIcebergThes, defaultAlpha, defaultEarlyStopThres, lOrigSim, *args):
+def testParas(sExec, hllResults, graphIndex, sAlgorname, iterNum, sInitAlgor, dampingFactor, sCurrGraphDir, sGraphFile, sExt, sResultsOutPrefix,   defaultIcebergThes, defaultAlpha, defaultEarlyStopThres, *args):
     
 
     
@@ -213,14 +184,14 @@ def testParas(sExec, hllResults, graphIndex, sAlgorname, origIterNum, sInitAlgor
         for (p,para) in enumerate(lThres):
             sTempOutFile = sResultsOutPrefix + '_' + sGraphFile + '_' + sAlgorname + '_' + sInitAlgor + '_' + str(defaultIcebergThes) + '_' + str(defaultAlpha) + '_' + str(para) +  '.result.csv'
                                                                           
-            runAlgor(sExec, origIterNum, sInitAlgor, dampingFactor, [('-s', para)], sCurrGraphDir, sGraphFile + sExt, sAlgorname, sTempOutFile)
+            runAlgor(sExec, iterNum, sInitAlgor, dampingFactor, [('-s', para)], sCurrGraphDir, sGraphFile + sExt, sAlgorname, sTempOutFile)
             
-            runningTime, iterNum, totalDiff = compare(sTempOutFile, lOrigSim)
+            runningTime, currIterNum = compare(sTempOutFile)
     
             # store results
 #             llResults.append([runningTime, iterNum, totalDiff])
             
-            hllResults[sAlgorname][p][graphIndex] = [runningTime, iterNum, totalDiff]
+            hllResults[sAlgorname][p][graphIndex] = [runningTime, currIterNum]
                             
             os.remove(sTempOutFile)            
         
@@ -234,14 +205,14 @@ def testParas(sExec, hllResults, graphIndex, sAlgorname, origIterNum, sInitAlgor
             for (a, alpha) in enumerate(lAlpha):
                 sTempOutFile = sResultsOutPrefix + '_' + sGraphFile + '_' + sAlgorname + '_' + sInitAlgor + '_' + str(thres) + '_' + str(alpha) + '_' + str(defaultEarlyStopThres) +  '.result.csv'
                                                                               
-                runAlgor(sExec, origIterNum, sInitAlgor, dampingFactor, [('-c', thres), ('-a', alpha)], sCurrGraphDir, sGraphFile + sExt, sAlgorname, sTempOutFile)
+                runAlgor(sExec, iterNum, sInitAlgor, dampingFactor, [('-c', thres), ('-a', alpha)], sCurrGraphDir, sGraphFile + sExt, sAlgorname, sTempOutFile)
                 
-                runningTime, iterNum, totalDiff = compare(sTempOutFile, lOrigSim)
+                runningTime, currIterNum = compare(sTempOutFile)
         
                 # store results
     #             llResults.append([runningTime, iterNum, totalDiff])
                 
-                hllResults[sAlgorname][t][a][graphIndex] = [runningTime, iterNum, totalDiff]
+                hllResults[sAlgorname][t][a][graphIndex] = [runningTime, currIterNum]
                                 
                 os.remove(sTempOutFile)           
         
@@ -259,12 +230,12 @@ def testParas(sExec, hllResults, graphIndex, sAlgorname, origIterNum, sInitAlgor
                                                                                   
                     runAlgor(sExec, origIterNum, sInitAlgor, dampingFactor, [('-s', esThres), ('-c', ibThres), ('-a', ibAlpha)], sCurrGraphDir, sGraphFile + sExt, sAlgorname, sTempOutFile)
                     
-                    runningTime, iterNum, totalDiff = compare(sTempOutFile, lOrigSim)
+                    runningTime, currIterNum = compare(sTempOutFile)
             
                     # store results
         #             llResults.append([runningTime, iterNum, totalDiff])
                     
-                    hllResults[sAlgorname][p][t][a][graphIndex] = [runningTime, iterNum, totalDiff]
+                    hllResults[sAlgorname][p][t][a][graphIndex] = [runningTime, currIterNum]
                                     
                     os.remove(sTempOutFile)          
         
@@ -276,7 +247,7 @@ def testParas(sExec, hllResults, graphIndex, sAlgorname, origIterNum, sInitAlgor
 
 
 
-def runAlgor(sExec, origIterNum, sInitAlgor, dampingFactor, ltPara, sCurrGraphDir, sGraphFile, sAlgorname, sTempOutFile):
+def runAlgor(sExec, iterNum, sInitAlgor, dampingFactor, ltPara, sCurrGraphDir, sGraphFile, sAlgorname, sTempOutFile):
     """
     Run the algorihm.
     """
@@ -284,7 +255,7 @@ def runAlgor(sExec, origIterNum, sInitAlgor, dampingFactor, ltPara, sCurrGraphDi
     print ltPara
     
     print [sExec, 
-                    ' -t ' + str(origIterNum), 
+                    ' -t ' + str(iterNum), 
                     ' -i ' + sInitAlgor,
                     ' -d ' + str(dampingFactor)] +\
                     [' {0} {1} '.format(option, para) for (option, para) in ltPara] +\
@@ -295,7 +266,7 @@ def runAlgor(sExec, origIterNum, sInitAlgor, dampingFactor, ltPara, sCurrGraphDi
                     ]
                     
     proc = sp.Popen(sExec + 
-                        ' -t ' + str(origIterNum) + 
+                        ' -t ' + str(iterNum) + 
                         ' -i ' + sInitAlgor +
     #                                 ' -b ' + str(ioBalance) +
                         ' -d ' + str(dampingFactor) +
@@ -313,7 +284,7 @@ def runAlgor(sExec, origIterNum, sInitAlgor, dampingFactor, ltPara, sCurrGraphDi
     
 
 
-def compare(sTempOutFile, lOrigSim):
+def compare(sTempOutFile):
 
     # load file then compare with existing
     with open(sTempOutFile, 'r') as fTempOutput:
@@ -325,20 +296,8 @@ def compare(sTempOutFile, lOrigSim):
         sLine = fTempOutput.readline();
         lTokens = sLine.split(':')
         iterNum = int(lTokens[1])                        
-            
-        # read in similarity matrix
-        lCurrSim = [];
-        csvTempOut = csv.reader(fTempOutput, delimiter=',')
-        for lRow in csvTempOut:
-            lCurrSim.extend([float(x) for x in lRow])                
-
-        assert(len(lOrigSim) == len(lCurrSim))
-        # compare the outputs
-        totalDiff = 0;
-        for i in range(len(lOrigSim)):
-            totalDiff += abs(lOrigSim[i] - lCurrSim[i])
-            
-        return runningTime, iterNum, totalDiff    
+                        
+        return runningTime, iterNum
 
 
 
