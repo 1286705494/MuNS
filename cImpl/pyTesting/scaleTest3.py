@@ -62,8 +62,8 @@ def main():
 #     lLambdaRange = [0.9]
     sInitAlgor = 'degBinaryInit'
 #     lsInit = ['degRatioInit']
-    lsAlgor = ['icebergAutosim']   
-#     lsAlgor = ['icebergEarlyStopAutosim']
+#     lsAlgor = ['icebergAutosim']   
+    lsAlgor = ['icebergEarlyStopAutosim']
     defaultIcebergThes = 0.01
     defaultAlpha = 0.5
     defaultEarlyStopThres = 0.01
@@ -77,7 +77,8 @@ def main():
     
     
 #     lSizes = [500, 1000, 2000, 5000]
-    lSizes = [25000, 50000]
+    lSizes = [25000]
+#     lSizes = [25000, 50000]
 #     lSizes = [1000, 2000, 5000]
 #     lSizes = [500]
 

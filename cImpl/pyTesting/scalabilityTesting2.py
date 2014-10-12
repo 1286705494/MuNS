@@ -64,15 +64,16 @@ def main():
     sInitAlgor = 'degBinaryInit'
 #     lsInit = ['degRatioInit']
     sOrigAlgor = 'autosim'
-    lsAlgor = ['icebergAutosim']   
-#     lsAlgor = ['icebergEarlyStopAutosim']
+#     lsAlgor = ['icebergAutosim']   
+    lsAlgor = ['icebergEarlyStopAutosim']
     defaultIcebergThes = 0.01
     defaultAlpha = 0.5
     defaultEarlyStopThres = 0.01
     
 #     lEarlyStopThres = [0.005, 0.01, 0.03, 0.05, 0.1]
     lEarlyStopThres = [0.1]
-    lIcebergThres = [0.95, 0.9, 0.8, 0.7]
+    lIcebergThres = [0.8, 0.7]    
+#     lIcebergThres = [0.95, 0.9, 0.8, 0.7]
 #     lIcebergAlpha = [0.1, 0.3, 0.5, 0.7, 0.9]
     lIcebergAlpha = [0.3]
     
