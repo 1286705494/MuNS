@@ -25,6 +25,9 @@
 void usage(char* sProgname);static
 int getOptions(int argc, char* argv[]);
 
+/** Read in a file into the provided data structures. */
+void readGraphFromFile(const list<char*>& lFileNames, int& vertNum, list<int>& vSrc, list<int>& vTar);
+
 
 
 // Command line options
@@ -68,70 +71,83 @@ int main(int argc, char *argv[])
 	int nextOptIndex = getOptions(argc, argv);
 
 	// there should be one or more files
-	if (argc - nextOptIndex != 3) {
+	if (argc - nextOptIndex < 3) {
 
 		cerr << "Incorrect number of arguments." << endl;
 		usage(argv[0]);
 	}
 
 
-    char* sGraphFilename = argv[nextOptIndex];
-    char* sMeasure = argv[nextOptIndex+1];
+
+    char* sMeasure = argv[nextOptIndex];
 //    int vertNum = atoi(argv[nextOptIndex+2]);
-    char* sSimOutFilename = argv[nextOptIndex+2];
-    
+    char* sSimOutFilename = argv[nextOptIndex+1];
+//    char* sGraphFilename = argv[nextOptIndex+2];
 
-    if (g_randGraphVertNum) {
-    	unifDistGraph(sGraphFilename, g_randGraphVertNum, g_randGraphVertNum * 2);
-    }
+    cout << sSimOutFilename << endl;
+    list<char*> lGraphFiles;
+    std::copy(&argv[nextOptIndex+2], &argv[argc], std::inserter(lGraphFiles, lGraphFiles.begin()));
 
-    // Read in file
-    ifstream fIn(sGraphFilename);
-    
-    
-    boost::char_separator<char> sSep(",\t ");
-    typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
-            
-//	unordered_set<int> vUniqueVerts;
+
+//    if (g_randGraphVertNum) {
+//    	unifDistGraph(sGraphFilename, g_randGraphVertNum, g_randGraphVertNum * 2);
+//    }
+
+    // graph data structure
     int vertNum = 0;
-
+    
     list<int> vSrc;
     list<int> vTar;
     
-
-    string sLine;
-    while(getline(fIn, sLine)) {
-    	// we ignore lines that start with '#'
-    	if (sLine[0] == '#') {
-    		continue;
-    	}
-        // tokenize string
-        Tokenizer tok(sLine, sSep);
-        typename Tokenizer::const_iterator it = tok.begin();
-        string sSrc = *it;
-        int src = atoi(sSrc.c_str());
-        ++it;
-        string sTar = *it;
-        int tar = atoi(sTar.c_str());
-
-        if (g_bVertSubtractOne) {
-        	src -= 1;
-        	tar -= 1;
-        }
-
-        vSrc.push_back(src);
-        vTar.push_back(tar);
-
-        if (vertNum < src + 1)
-        	vertNum = src + 1;
-        if (vertNum < tar + 1)
-           	vertNum = tar + 1;
-
-//		vUniqueVerts.insert(src);
-//		vUniqueVerts.insert(tar);
-    }
-    
-    fIn.close();
+    // read in the files
+    readGraphFromFile(lGraphFiles, vertNum, vSrc, vTar);
+//    // Read in file
+//    ifstream fIn(sGraphFilename);
+//
+//
+//    boost::char_separator<char> sSep(",\t ");
+//    typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
+//
+////	unordered_set<int> vUniqueVerts;
+//    int vertNum = 0;
+//
+//    list<int> vSrc;
+//    list<int> vTar;
+//
+//
+//    string sLine;
+//    while(getline(fIn, sLine)) {
+//    	// we ignore lines that start with '#'
+//    	if (sLine[0] == '#') {
+//    		continue;
+//    	}
+//        // tokenize string
+//        Tokenizer tok(sLine, sSep);
+//        typename Tokenizer::const_iterator it = tok.begin();
+//        string sSrc = *it;
+//        int src = atoi(sSrc.c_str());
+//        ++it;
+//        string sTar = *it;
+//        int tar = atoi(sTar.c_str());
+//
+//        if (g_bVertSubtractOne) {
+//        	src -= 1;
+//        	tar -= 1;
+//        }
+//
+//        vSrc.push_back(src);
+//        vTar.push_back(tar);
+//
+//        if (vertNum < src + 1)
+//        	vertNum = src + 1;
+//        if (vertNum < tar + 1)
+//           	vertNum = tar + 1;
+//
+////		vUniqueVerts.insert(src);
+////		vUniqueVerts.insert(tar);
+//    }
+//
+//    fIn.close();
 
     // number of vertices
 //	int vertNum = vUniqueVerts.size();
@@ -414,3 +430,59 @@ void usage(char* sProgname)
 	cerr << sProgname << ": [inFilename] [outFilename]" << endl;
 	exit(1);
 }
+
+
+void readGraphFromFile(const list<char*>& lFileNames, int& vertNum, list<int>& vSrc, list<int>& vTar)
+{
+	vertNum = 0;
+
+	int vertNumberingAdjust = 0;
+
+	// loop through files
+	for (typename list<char*>::const_iterator fit = lFileNames.begin(); fit != lFileNames.end(); ++fit) {
+			// Read in file
+		    ifstream fIn(*fit);
+
+		    int entriesAdded = 0;
+
+		    boost::char_separator<char> sSep(",\t ");
+		    typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
+
+		    string sLine;
+		    while(getline(fIn, sLine)) {
+		    	// we ignore lines that start with '#'
+		    	if (sLine[0] == '#') {
+		    		continue;
+		    	}
+		        // tokenize string
+		        Tokenizer tok(sLine, sSep);
+		        typename Tokenizer::const_iterator it = tok.begin();
+		        string sSrc = *it;
+		        int src = atoi(sSrc.c_str()) + vertNumberingAdjust;
+		        ++it;
+		        string sTar = *it;
+		        int tar = atoi(sTar.c_str())  + vertNumberingAdjust;
+
+		        if (g_bVertSubtractOne) {
+		        	src -= 1;
+		        	tar -= 1;
+		        }
+
+		        vSrc.push_back(src);
+		        vTar.push_back(tar);
+
+		        if (vertNum < src + 1)
+		        	vertNum = src + 1;
+		        if (vertNum < tar + 1)
+		           	vertNum = tar + 1;
+
+		    }
+
+		    fIn.close();
+
+		    // adjust by the number of vertices we have added so far
+		    vertNumberingAdjust = vertNum;
+	} // end of for loop
+
+} // end of readGraphFileFile()
+

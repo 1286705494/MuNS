@@ -13,6 +13,7 @@ def loadPart(sAbsPartFile, sMode):
     """
     
     llPartitions = []
+    currVert = 0;
     
     if sMode == 'partition':
         with open(sAbsPartFile, 'r') as fPart:
@@ -20,8 +21,8 @@ def loadPart(sAbsPartFile, sMode):
             csvPart = csv.reader(fPart, delimiter=',')
             for lRow in csvPart:
                 llPartitions.append([int(x) for x in lRow])
+                currVert += len(lRow)
     elif sMode == 'membership':
-        currVert = 0
         with open(sAbsPartFile, 'r') as fPart:
             csvPart = csv.reader(fPart, delimiter=',')
             for lRow in csvPart:        
@@ -36,7 +37,6 @@ def loadPart(sAbsPartFile, sMode):
                 
                 currVert += 1            
     elif sMode == 'list':
-        currVert = 0
         
         with open(sAbsPartFile, 'r') as fPart:
             csvPart = csv.reader(fPart, delimiter=',')
@@ -51,7 +51,6 @@ def loadPart(sAbsPartFile, sMode):
                 
                 currVert += 1       
     elif sMode == 'singleList':
-        currVert = 0
         
         with open(sAbsPartFile, 'r') as fPart:
             csvPart = csv.reader(fPart, delimiter=',')
@@ -66,6 +65,84 @@ def loadPart(sAbsPartFile, sMode):
                 currVert += 1                   
             
     return llPartitions
+
+
+
+def loadParts(lsAbsPartFile, sMode):
+    """
+    Load the partitions from file.
+    """
+    
+    lllPartitions = []
+    
+    currVert = 0
+    if sMode == 'partition':
+        for sAbsPartFile in lsAbsPartFile:
+            llPartitions = []
+            with open(sAbsPartFile, 'r') as fPart:
+                # read in the actual partition file
+                csvPart = csv.reader(fPart, delimiter=',')
+                for lRow in csvPart:
+                    llPartitions.append([int(x) for x in lRow])
+                    currVert += 1
+                    
+            lllPartitions.append(llPartitions)
+    elif sMode == 'membership':
+        
+        for sAbsPartFile in lsAbsPartFile:
+            llPartitions = []
+            with open(sAbsPartFile, 'r') as fPart:
+                csvPart = csv.reader(fPart, delimiter=',')
+                for lRow in csvPart:        
+                    # only take first element as partition index
+                    pos = next((i for (i, x) in enumerate(lRow) if int(x) > 0), None)
+                    assert(pos != None)
+    
+                    # add partitions while we still don't have enough
+                    while len(llPartitions) <= pos:
+                        llPartitions.append([]) 
+                    llPartitions[pos].append(currVert)
+                    
+                    currVert += 1
+                    
+            lllPartitions.append(llPartitions)
+    elif sMode == 'list':
+        
+        for sAbsPartFile in lsAbsPartFile:
+            llPartitions = []
+            with open(sAbsPartFile, 'r') as fPart:
+                csvPart = csv.reader(fPart, delimiter=',')
+                for lRow in csvPart:
+                    # only take first element as partition index
+                    vertId = int(lRow[0]) # we dont' use
+                    pos = int(lRow[1])
+                    # add partitions while we still don't have enough (assume pos start at 0)
+                    while len(llPartitions) <= pos:
+                        llPartitions.append([]) 
+                    llPartitions[pos].append(currVert)
+                    
+                    currVert += 1   
+
+            lllPartitions.append(llPartitions)   
+    elif sMode == 'singleList':
+        
+        
+        for sAbsPartFile in lsAbsPartFile:
+            llPartitions = []
+            with open(sAbsPartFile, 'r') as fPart:
+                csvPart = csv.reader(fPart, delimiter=',')
+                for lRow in csvPart:
+                    # only take first element as partition index
+                    pos = int(lRow[0]) # we dont' use
+                    # add partitions while we still don't have enough (assume pos start at 0)
+                    while len(llPartitions) <= pos:
+                        llPartitions.append([]) 
+                    llPartitions[pos].append(currVert)
+                    
+                    currVert += 1
+            lllPartitions.append(llPartitions)                                       
+                
+    return lllPartitions, currVert
 
 
 ############################################################################################
@@ -110,6 +187,26 @@ def avgInterSim(llSim, llPartitions):
                     totalSim += llSim[x][y]
                 
     return (totalSim / totalPairs)
+
+
+def avgCrossSim(llSim, llPartitions1, llPartitions2):
+    """
+    Compute the average inter-partition similarity for the specified cross partitions.
+    """    
+    
+    totalSim = 0
+    
+    totalPairs = 0
+    
+    for lPart1 in llPartitions1:
+        for lPart2 in llPartitions2:
+            totalPairs += len(lPart1) * len(lPart2)
+            for x in lPart1:
+                for y in lPart2:
+                    totalSim += llSim[x][y]
+                
+    return (totalSim / totalPairs)
+    
 
 
 def avgRank(lSim, rowLen, llPartition, epsilon):
@@ -200,7 +297,64 @@ def percentileRank(lSim, epsilon):
         
     return lRank
     
+
+
+def avgCrossRank(lSim, rowLen, llPartition1, llPartition2, epsilon):
+    """
+    Compute the average similarity ranking within the specified partitions.
     
+    @param epsilon: If two values in llSim < this, then it is considered as being the same.
+    """
+    
+    
+    # covert to a vector
+#     lSim = [item for lSublist in llSim for item in lSublist]
+#     rowLen = len(llSim[0])
+#     print lSim
+    
+#     # sort the similarities with indices into it
+#     lSortedIndices = [i for (i,val) in sorted(enumerate(lSim), key=itemgetter(1), reverse=False)]
+# #     print lSortedIndices
+#     
+#     lRank = [0 for x in range(0,len(lSortedIndices))]
+#     
+#     # compute the rank
+#     for (i,ind) in enumerate(lSortedIndices):
+#         lRank[ind] = float(i+1)  / len(lRank)
+# #     print lRank
+
+    lRank = percentileRank(lSim, epsilon)
+        
+    
+                
+    totalInterRank = 0
+    totalIntraRank = 0
+    totalInterPairs = 0
+    totalIntraPairs = 0
+    
+    partNum2 = len(llPartition2)
+    for (i, lPart1) in enumerate(llPartition1):
+        for j in range(i, partNum2):
+            lPart2 = llPartition2[j]
+            
+            if i == j:
+                totalIntraPairs += 2*len(lPart1) * len(lPart2)
+                for x in lPart1:
+                    for y in lPart2:
+                        totalIntraPairs += lRank[x*rowLen + y]
+                        totalIntraPairs += lRank[y*rowLen + x]                
+            else:
+                totalInterPairs += 2*len(lPart1) * len(lPart2)
+                for x in lPart1:
+                    for y in lPart2:
+                        totalInterRank += lRank[x*rowLen + y]
+                        totalInterRank += lRank[y*rowLen + x]
+                
+#     print totalIntraRank
+#     print totalInterRank
+#     print totalIntraPairs
+#     print totalInterPairs
+    return float(totalIntraRank) / totalIntraPairs, float(totalInterRank) / totalInterPairs      
     
     
      
