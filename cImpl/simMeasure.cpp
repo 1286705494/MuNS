@@ -259,6 +259,14 @@ int main(int argc, char *argv[])
 			pfSim = new AutoSimIceberg(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
 		}
 	}
+    else if (strcmp(sMeasure, "hashAutosim") == 0) {
+    	if (g_bUseConvEpsilon) {
+    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
+    	}
+    	else {
+    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
+    	}
+    }
     else {
     	cerr << "Unknown similarity measure option " << sMeasure << endl;
     	usage(argv[0]);
