@@ -48,12 +48,17 @@ protected:
 	bool m_bEarlySimStop2;
 	float m_earlySimStopThres2;
 
+	/** Hashing parameters. */
+	// Number of bins/length to represent the neighbourhood degree vectors
+	int binNum;
+
+
 
 
 public:
 
-	AutoSimHash(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useIceberg, float simThres, float approxFaction) throw(std::invalid_argument);
-	AutoSimHash(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useIceberg, float simThres, float approxFaction) throw(std::invalid_argument);
+	AutoSimHash(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useHash, float simThres, float approxFaction) throw(std::invalid_argument);
+	AutoSimHash(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useHash, float simThres, float approxFaction) throw(std::invalid_argument);
 
 	virtual ~AutoSimHash();
 
@@ -65,7 +70,7 @@ protected:
 	/**
 	 * Perform the iceberg filtering.
 	 */
-	void hashFilter(const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, C_INT_PAIR_HASH_SET* hValidPair);
+	void hashFilter(const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, C_INT_PAIR_HASH_SET* hValidPair, int maxInDeg, int maxOutDeg);
 
 
 	/**
@@ -84,6 +89,12 @@ protected:
 	 * LI distance between two matrices represented as hash tables.
 	 */
 	float matDiff(const C_INT_PAIR_HASH_SET* const phValidPair, const C_INT_PAIR_HASH_MAP* const pmPrevSim, const C_INT_PAIR_HASH_MAP* const pmCurrSim) const;
+
+
+	/**
+	 * Construct degree vector.
+	 */
+	void constructDegVec(std::vector<int>& vInHist, std::vector<int>& vOutHist, const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, int maxInDeg, int maxOutDeg) const;
 
 }; // end of class AutoSimHash
 

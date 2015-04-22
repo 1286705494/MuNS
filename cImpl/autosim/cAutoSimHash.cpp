@@ -49,14 +49,14 @@
 
 
 
-AutoSimHash::AutoSimHash(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useIceberg, float simThres, float approxFaction) throw(std::invalid_argument)
-	: AutoSim(dampingFactor, maxIter, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_bIceberg(useIceberg), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
+AutoSimHash::AutoSimHash(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useHash, float simThres, float approxFaction) throw(std::invalid_argument)
+	: AutoSim(dampingFactor, maxIter, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_bHash(useHash), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
 {
 } // end of AutoSimHash()
 
 
-AutoSimHash::AutoSimHash(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useIceberg, float simThres, float approxFaction) throw(std::invalid_argument)
-	: AutoSim(dampingFactor, maxIter, convEpsilon, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_bIceberg(useIceberg), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
+AutoSimHash::AutoSimHash(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useHash, float simThres, float approxFaction) throw(std::invalid_argument)
+	: AutoSim(dampingFactor, maxIter, convEpsilon, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_bHash(useHash), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
 {
 } // end of AutoSimHash()
 
@@ -86,6 +86,8 @@ float* AutoSimHash::computeSim(const std::list<int>& vSrc, const std::list<int>&
     vector< vector<int> > vvInNeigh(vertNum);
     vector< vector<int> > vvOutNeigh(vertNum);
 
+
+
     // set the neighbourhoods and degrees
     std::list<int>::const_iterator sit = vSrc.begin(), tit = vTar.begin();
     for ( ; sit != vSrc.end(); ++sit, ++tit) {
@@ -96,33 +98,25 @@ float* AutoSimHash::computeSim(const std::list<int>& vSrc, const std::list<int>&
     } // end of for
 
 
-
-    // parameter beta: Linear here, also can use square and Euler's
-    int srcNum = 0;
-    int snkNum = 0;
+    // max in and out degree
+    int maxInDeg = 0;
+    int maxOutDeg = 0;
     for (int v = 0; v < vertNum; ++v) {
-        if (vvOutNeigh[v].size() == 0 && vvInNeigh[v].size() > 0) {
-            snkNum += 1;
+        // find max degree also
+
+        if (vvInNeigh[v].size()  > maxInDeg) {
+        	maxInDeg = vvInNeigh[v].size();
         }
-        if (vvInNeigh[v].size() == 0 && vvOutNeigh[v].size() > 0) {
-            srcNum += 1;
+        if (vvOutNeigh[v].size() > maxOutDeg) {
+        	maxOutDeg = vvOutNeigh[v].size();
         }
     }
 
-    // initialise beta
-    float beta = 0.5;
-    if (srcNum > 0 || snkNum > 0) {
-    	beta= static_cast<float>(vertNum - snkNum) / (2*vertNum - snkNum - srcNum);
-    }
-
-//    cout << "beta = " << beta << endl;
-    if (m_bUseInputBalance) {
-    	beta = m_ioBalance;
-    }
-
+    // TODO
+    float beta = 0.0;
 
     // compute iceberg to determine which vertex pairs
-    hashFilter(vvInNeigh, vvOutNeigh, pmValidPairs, beta);
+    hashFilter(vvInNeigh, vvOutNeigh, pmValidPairs, maxInDeg, maxOutDeg);
 
 
     // initialise similarity matrix
@@ -363,21 +357,27 @@ float* AutoSimHash::computeSim(const std::list<int>& vSrc, const std::list<int>&
 /* ********************************************************************* */
 
 
-void AutoSimHash::hashFilter(const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, C_INT_PAIR_HASH_SET* hValidPair)
+void AutoSimHash::hashFilter(const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, C_INT_PAIR_HASH_SET* hValidPair, int maxInDeg, int maxOutDeg)
 {
 	using namespace std;
 
 	int vertNum = vvInNeigh.size();
 	assert(vvInNeigh.size() == vvOutNeigh.size());
 
-	// sort degree
+	// count degree
+	vector<int> vInHist(binNum);
+	vector<int> vOutHist(binNum);
 
-	// bin degree and construct combined vector for in and out degree
+	// 	bin degree and construct combined vector for in and out degree
+	constructDegVec(vInHist, vOutHist, vvInNeigh, vvOutNeigh, maxInDeg, maxOutDeg);
+
 
 	// hash combined vector
 
 	// see which vertex pairs are in the same bin, and insert those into hashpair groups
 
+	float thresRatio = 0.0;
+	float beta = 0.0;
 
 	for (int i = 0; i < vertNum; ++i) {
 		for (int j = i + 1; j < vertNum; ++j) {
@@ -517,6 +517,51 @@ float AutoSimHash::matDiff(const C_INT_PAIR_HASH_SET* const phValidPair, const C
 	// normalise with the number of valid pairs
 	return diff / phValidPair->size();
 } // end of l1MatDiff()
+
+
+
+
+void AutoSimHash::constructDegVec(std::vector<int>& vInHist, std::vector<int>& vOutHist, const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, int maxInDeg, int maxOutDeg) const
+{
+	using namespace std;
+
+	int vertNum = vvInNeigh.size();
+
+
+	// construct bin intervals
+	float inBinSize = static_cast<float>(maxInDeg) / binNum;
+	float outBinSize = static_cast<float>(maxOutDeg) / binNum;
+
+	vector<float> vInBinInterval(binNum);
+	vector<float> vOutBinInterval(binNum);
+
+	vInBinInterval[0] = 0;
+	vOutBinInterval[0] = 0;
+	for (int b = 1; b < binNum; ++b) {
+		vInBinInterval[b] = b * inBinSize;
+		vOutBinInterval[b] = b * outBinSize;
+	}
+
+	// initialise histogram vectors to 0
+	int histSize = vInHist.size();
+	assert(histSize == vOutHist.size());
+	for (int i = 0; i < histSize; ++i) {
+		vInHist[i] = 0;
+		vOutHist[i] = 0;
+	}
+
+
+	// find the degree and bin to relevant histogram
+	for (int i = 0; i < vertNum; ++i) {
+		int inIndex = static_cast<int>(floor(vvInNeigh[i].size() / inBinSize));
+		++vInHist[inIndex];
+		int outIndex = static_cast<int>(floor(vvOutNeigh[i].size() / outBinSize));
+		++vOutHist[outIndex];
+	}
+
+
+} // end of constructDegVec()
+
 
 
 
