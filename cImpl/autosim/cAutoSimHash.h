@@ -50,7 +50,9 @@ protected:
 
 	/** Hashing parameters. */
 	// Number of bins/length to represent the neighbourhood degree vectors
-	int binNum;
+	int m_binNum;
+	// Number of hash buckets
+	int m_hashBinNum;
 
 
 
@@ -71,6 +73,11 @@ protected:
 	 * Perform the iceberg filtering.
 	 */
 	void hashFilter(const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, C_INT_PAIR_HASH_SET* hValidPair, int maxInDeg, int maxOutDeg);
+
+	/**
+	 * Hash.
+	 */
+	void hash(std::vector<std::vector<int> >& vvVertBuckets, const std::vector<int>& vInHist, const std::vector<int>& vOutHist);
 
 
 	/**
@@ -94,7 +101,13 @@ protected:
 	/**
 	 * Construct degree vector.
 	 */
-	void constructDegVec(std::vector<int>& vInHist, std::vector<int>& vOutHist, const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, int maxInDeg, int maxOutDeg) const;
+	void constructNeighDegVec(std::vector<std::vector<int> >& vvInHist, std::vector<std::vector<int> >& vvOutHist, const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, int maxInDeg, int maxOutDeg) const;
+
+
+	/**
+	 * LSH Hash the neighbourhood degree vectors into bins.
+	 */
+	void hashVectors(std::vector<std::vector<int> >& vvVertBuckets, const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist) const;
 
 }; // end of class AutoSimHash
 

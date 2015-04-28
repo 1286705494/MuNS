@@ -83,8 +83,8 @@ float* AutoSimHash::computeSim(const std::list<int>& vSrc, const std::list<int>&
 //    C_INT_PAIR_HASH_MAP **pmCurrSim = &mCurrSim;
 
     // construct neighbour list
-    vector< vector<int> > vvInNeigh(vertNum);
-    vector< vector<int> > vvOutNeigh(vertNum);
+    vector< vector<int> > vvInNeigh(vertNum, std::allocator<std::vector<int>>());
+    vector< vector<int> > vvOutNeigh(vertNum, std::allocator<std::vector<int>>());
 
 
 
@@ -138,8 +138,8 @@ float* AutoSimHash::computeSim(const std::list<int>& vSrc, const std::list<int>&
 
     // temporary structure for mIn and mOut
     // TODO: use max in and out degree instead
-    vector<float> mIn(vertNum * vertNum);
-    vector<float> mOut(vertNum * vertNum);
+    vector<float> mIn(vertNum * vertNum, 0.0, std::allocator<float>());
+    vector<float> mOut(vertNum * vertNum, 0.0, std::allocator<float>());
 
     // perform loop iterations
     for (int t = 1; t <= m_maxIter; ++t) {
@@ -365,14 +365,16 @@ void AutoSimHash::hashFilter(const std::vector< std::vector<int> >& vvInNeigh, c
 	assert(vvInNeigh.size() == vvOutNeigh.size());
 
 	// count degree
-	vector<int> vInHist(binNum);
-	vector<int> vOutHist(binNum);
+	vector<vector<int> > vvInHist(vertNum, std::allocator<vector<int> >());
+	vector<vector<int> > vvOutHist(vertNum, std::allocator<vector<int> >());
 
 	// 	bin degree and construct combined vector for in and out degree
-	constructDegVec(vInHist, vOutHist, vvInNeigh, vvOutNeigh, maxInDeg, maxOutDeg);
+	constructNeighDegVec(vvInHist, vvOutHist, vvInNeigh, vvOutNeigh, maxInDeg, maxOutDeg);
 
 
 	// hash combined vector
+	vector<vector<int> > vvVertBuckets(m_hashBinNum, std::allocator<vector<int> >());
+	hashVectors(vvVertBuckets, vvInHist, vvOutHist);
 
 	// see which vertex pairs are in the same bin, and insert those into hashpair groups
 
@@ -411,7 +413,7 @@ void AutoSimHash::hashFilter(const std::vector< std::vector<int> >& vvInNeigh, c
 				// perform rule1 test now
 				if ((1-beta) * inRatio + beta * outRatio > thresRatio) {
 
-					// perform rule2 test
+					// perform rule2 testconstructDegVec
 					// find maximum matching between u and v
 
 					hValidPair->insert(make_pair(i, j));
@@ -519,9 +521,10 @@ float AutoSimHash::matDiff(const C_INT_PAIR_HASH_SET* const phValidPair, const C
 } // end of l1MatDiff()
 
 
+/* *************************************************************** */
 
 
-void AutoSimHash::constructDegVec(std::vector<int>& vInHist, std::vector<int>& vOutHist, const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, int maxInDeg, int maxOutDeg) const
+void AutoSimHash::constructNeighDegVec(std::vector<std::vector<int> >& vvInHist, std::vector<std::vector<int> >& vvOutHist, const std::vector< std::vector<int> >& vvInNeigh, const std::vector< std::vector<int> >& vvOutNeigh, int maxInDeg, int maxOutDeg) const
 {
 	using namespace std;
 
@@ -529,39 +532,56 @@ void AutoSimHash::constructDegVec(std::vector<int>& vInHist, std::vector<int>& v
 
 
 	// construct bin intervals
-	float inBinSize = static_cast<float>(maxInDeg) / binNum;
-	float outBinSize = static_cast<float>(maxOutDeg) / binNum;
+	float inBinSize = static_cast<float>(maxInDeg) / m_binNum;
+	float outBinSize = static_cast<float>(maxOutDeg) / m_binNum;
 
-	vector<float> vInBinInterval(binNum);
-	vector<float> vOutBinInterval(binNum);
+	vector<float> vInBinInterval(m_binNum, std::allocator<float>());
+	vector<float> vOutBinInterval(m_binNum, std::allocator<float>());
 
 	vInBinInterval[0] = 0;
 	vOutBinInterval[0] = 0;
-	for (int b = 1; b < binNum; ++b) {
+	for (int b = 1; b < m_binNum; ++b) {
 		vInBinInterval[b] = b * inBinSize;
 		vOutBinInterval[b] = b * outBinSize;
 	}
 
 	// initialise histogram vectors to 0
-	int histSize = vInHist.size();
-	assert(histSize == vOutHist.size());
-	for (int i = 0; i < histSize; ++i) {
-		vInHist[i] = 0;
-		vOutHist[i] = 0;
+	int histSize = vvInHist.size();
+	assert(histSize == vvOutHist.size());
+	for (int v = 0; v < vertNum; ++v) {
+		for (int i = 0; i < histSize; ++i) {
+			vvInHist[v][i] = 0;
+			vvOutHist[v][i] = 0;
+		}
 	}
 
 
-	// find the degree and bin to relevant histogram
-	for (int i = 0; i < vertNum; ++i) {
-		int inIndex = static_cast<int>(floor(vvInNeigh[i].size() / inBinSize));
-		++vInHist[inIndex];
-		int outIndex = static_cast<int>(floor(vvOutNeigh[i].size() / outBinSize));
-		++vOutHist[outIndex];
+	// find the degrees of neighbours and bin to relevant histogram
+	// TODO: neighbour degrees should be in and out
+	for (int v = 0; v < vertNum; ++v) {
+		// in neighbours
+		typename std::vector<int>::const_iterator vit = vvInNeigh[v].begin();
+		int inIndex;
+		for ( ; vit != vvInNeigh[v].end(); ++vit) {
+			inIndex = static_cast<int>(floor(vvInNeigh[*vit].size() / inBinSize));
+			++vvInHist[v][inIndex];
+		}
+		// out neighbours
+		vit = vvOutNeigh[v].begin();
+		int outIndex;
+		for ( ; vit != vvInNeigh[v].end(); ++vit) {
+			outIndex = static_cast<int>(floor(vvOutNeigh[*vit].size() / outBinSize));
+			++vvOutHist[v][outIndex];
+		}
 	}
 
 
 } // end of constructDegVec()
 
 
+void AutoSimHash::hashVectors(std::vector<std::vector<int> >& vvVertBuckets, const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist) const
+{
 
+
+} // end of hash()
 
