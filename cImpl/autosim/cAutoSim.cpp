@@ -155,8 +155,8 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 
 
     // construct neighbour list
-    vector< vector<int> > vvInNeigh(vertNum);
-    vector< vector<int> > vvOutNeigh(vertNum);
+    vector< vector<int> > vvInNeigh(vertNum, std::allocator<std::vector<int>>());
+    vector< vector<int> > vvOutNeigh(vertNum, std::allocator<std::vector<int>>());
 
     // set the neighbourhoods and degrees
     std::list<int>::const_iterator sit = vSrc.begin(), tit = vTar.begin();
@@ -242,8 +242,8 @@ float* AutoSim::computeSim(const std::list<int>& vSrc, const std::list<int>& vTa
 #endif
 
     // temporary structure for mIn and mOut
-    vector<float> mIn(vertNum * vertNum);
-    vector<float> mOut(vertNum * vertNum);
+    vector<float> mIn(vertNum * vertNum, 0.0, std::allocator<float>());
+    vector<float> mOut(vertNum * vertNum, 0.0, std::allocator<float>());
 
     // perform loop iterations
     for (int t = 1; t <= m_maxIter; ++t) {
