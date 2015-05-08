@@ -11,10 +11,9 @@
 #define PSTABLELSH_H_
 
 #include <vector>
+#include "LSH.h"
 
 
-/** Point type. */
-typedef std::vector<int> POINT;
 
 
 // advanced declaration
@@ -25,7 +24,7 @@ class PStableHash;
 /**
  * LSH based on the P-Stable distribution for L2 norm.
  */
-class PStableLSH
+class PStableLSH : public LSH
 {
 protected:
 
@@ -45,8 +44,8 @@ protected:
 	int m_hashTableNum;
 
 
-	/** Hash functions. */
-	PStableHash* m_vHashFunc;
+	/** Pointer of Hash functions. */
+	PStableHash** m_vHashFunc;
 
 	/** Hash tables. */
 	HASH_TABLE* m_vHashTable;
@@ -63,7 +62,7 @@ public:
 	/**
 	 * Insert a point into the hash table.
 	 */
-	void insertPoint(const POINT& vPoint, int pointId);
+	virtual void insertPoint(const POINT& vPoint, int pointId);
 
 
 	/**

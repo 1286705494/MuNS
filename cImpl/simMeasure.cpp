@@ -10,6 +10,7 @@
 
 #include "autosim/cAutoSim.h"
 #include "autosim/cAutoSimIceberg.h"
+#include "autosim/cAutoSimHash.h"
 #include "rolesim/cRoleSim.h"
 #include "simrank/cSimRank.h"
 #include "prank/cPRank.h"
@@ -53,6 +54,8 @@ float g_earlySimStopThres = 0.01;
 bool g_bVertSubtractOne = false;
 
 int g_randGraphVertNum = 0;
+
+std::string g_hashFuncName = "pStable";
 
 
 
@@ -261,10 +264,10 @@ int main(int argc, char *argv[])
 	}
     else if (strcmp(sMeasure, "hashAutosim") == 0) {
     	if (g_bUseConvEpsilon) {
-    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
+    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergApproxFactor, g_hashFuncName);
     	}
     	else {
-    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, true, g_icebergThres, g_icebergApproxFactor);
+    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergApproxFactor, g_hashFuncName);
     	}
     }
     else {
@@ -381,7 +384,7 @@ int getOptions(int argc, char* argv[])
 	/*
 	* f -
 	*/
-	const char* optString = "t:d:i:e:b:c:a:s:r:m";
+	const char* optString = "t:d:i:e:b:c:a:s:r:mh:";
 	while ((currOpt = getopt(argc, argv, optString)) != -1) {
 		switch (currOpt) {
 			case 't':
@@ -416,6 +419,9 @@ int getOptions(int argc, char* argv[])
 				break;
 			case 'm':
 				g_bVertSubtractOne = true;
+				break;
+			case 'h':
+				g_hashFuncName = optarg;
 				break;
 			default:
 				std::cerr << currOpt << " is not a valid option." << std::endl;

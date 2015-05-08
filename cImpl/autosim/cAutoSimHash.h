@@ -18,6 +18,8 @@
 #include "cAutoSim.h"
 #include "AutoSimInit.h"
 #include "../utils/pairUtils.h"
+#include "../utils/lsh/LSH.h"
+#include "../utils/lsh/pStableLSH.h"
 
 
 
@@ -34,12 +36,6 @@ class AutoSimHash : public AutoSim
 {
 protected:
 
-	/** Whether to use hashing. */
-	bool m_bHash;
-
-	/** Iceberg filter parameter.  All similarities less than this are estimated. */
-	float m_simThres;
-
 	/** Iceberg approximation factor for non-computed similarities. */
 	float m_approxFaction;
 
@@ -52,15 +48,18 @@ protected:
 	// Number of bins/length to represent the neighbourhood degree vectors
 	int m_binNum;
 	// Number of hash buckets
-	int m_hashBinNum;
+	int m_hashBucketNum;
+
+	/** Hashing function. */
+	LSH* m_hashFunc;
 
 
 
 
 public:
 
-	AutoSimHash(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useHash, float simThres, float approxFaction) throw(std::invalid_argument);
-	AutoSimHash(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useHash, float simThres, float approxFaction) throw(std::invalid_argument);
+	AutoSimHash(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float approxFaction, const std::string& sHashFunction, int binNum, int hashBucketNum) throw(std::invalid_argument);
+	AutoSimHash(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float approxFaction, const std::string& sHashFunction, int binNum, int hashBucketNum) throw(std::invalid_argument);
 
 	virtual ~AutoSimHash();
 
@@ -107,7 +106,7 @@ protected:
 	/**
 	 * LSH Hash the neighbourhood degree vectors into bins.
 	 */
-	void hashVectors(std::vector<std::vector<int> >& vvVertBuckets, const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist) const;
+	void hashVectors(const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist) const;
 
 }; // end of class AutoSimHash
 

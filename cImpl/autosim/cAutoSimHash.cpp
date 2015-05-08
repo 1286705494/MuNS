@@ -11,10 +11,13 @@
 #include <vector>
 #include <list>
 #include <unordered_set>
+#include <string>
 #include <stdexcept>
 #include <cstdlib>
 #include <cassert>
 #include <cmath>
+
+
 
 
 #include "cAutoSimHash.h"
@@ -22,6 +25,8 @@
 #include "../matching/BMatching.h"
 #include "../utils/matUtils.h"
 #include "../utils/pairUtils.h"
+#include "../utils/lsh/LSH.h"
+#include "../utils/lsh/pStableLSH.h"
 
 
 #ifdef _ZERO_SIM_COUNT
@@ -49,15 +54,33 @@
 
 
 
-AutoSimHash::AutoSimHash(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useHash, float simThres, float approxFaction) throw(std::invalid_argument)
-	: AutoSim(dampingFactor, maxIter, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_bHash(useHash), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
+AutoSimHash::AutoSimHash(float dampingFactor, int maxIter, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float approxFaction, const std::string& sHashFunction, int binNum, int hashBucketNum) throw(std::invalid_argument)
+	: AutoSim(dampingFactor, maxIter, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres), m_binNum(binNum), m_hashBucketNum(hashBucketNum)
 {
+	using namespace std;
+
+	if (sHashFunction.compare("pStable") == 0) {
+		m_hashFunc = new PStableLSH(binNum, hashBucketNum);
+	}
+	else {
+		// unknown
+		throw invalid_argument("Unknown hash function name.");
+	}
 } // end of AutoSimHash()
 
 
-AutoSimHash::AutoSimHash(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, bool useHash, float simThres, float approxFaction) throw(std::invalid_argument)
-	: AutoSim(dampingFactor, maxIter, convEpsilon, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance), m_bHash(useHash), m_simThres(simThres), m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres)
+AutoSimHash::AutoSimHash(float dampingFactor, int maxIter, float convEpsilon, const std::string& sInitAlgor, bool earlySimStop, float earlySimStopThres, bool useInputBalance, float ioBalance, float approxFaction, const std::string& sHashFunction, int binNum, int hashBucketNum) throw(std::invalid_argument)
+	: AutoSim(dampingFactor, maxIter, convEpsilon, sInitAlgor, earlySimStop, earlySimStopThres, useInputBalance, ioBalance),m_approxFaction(approxFaction), m_bEarlySimStop2(earlySimStop), m_earlySimStopThres2(earlySimStopThres), m_binNum(binNum), m_hashBucketNum(hashBucketNum)
 {
+	using namespace std;
+
+	if (sHashFunction.compare("pStable") == 0) {
+		m_hashFunc = new PStableLSH(binNum, hashBucketNum);
+	}
+	else {
+		// unknown
+		throw invalid_argument("Unknown hash function name.");
+	}
 } // end of AutoSimHash()
 
 
@@ -115,7 +138,7 @@ float* AutoSimHash::computeSim(const std::list<int>& vSrc, const std::list<int>&
     // TODO
     float beta = 0.0;
 
-    // compute iceberg to determine which vertex pairs
+    // compute hashing to determine which vertex pairs
     hashFilter(vvInNeigh, vvOutNeigh, pmValidPairs, maxInDeg, maxOutDeg);
 
 
@@ -373,8 +396,8 @@ void AutoSimHash::hashFilter(const std::vector< std::vector<int> >& vvInNeigh, c
 
 
 	// hash combined vector
-	vector<vector<int> > vvVertBuckets(m_hashBinNum, std::allocator<vector<int> >());
-	hashVectors(vvVertBuckets, vvInHist, vvOutHist);
+//	vector<vector<int> > vvVertBuckets(m_hashBinNum, std::allocator<vector<int> >());
+	hashVectors(vvInHist, vvOutHist);
 
 	// see which vertex pairs are in the same bin, and insert those into hashpair groups
 
@@ -383,47 +406,39 @@ void AutoSimHash::hashFilter(const std::vector< std::vector<int> >& vvInNeigh, c
 
 	for (int i = 0; i < vertNum; ++i) {
 		for (int j = i + 1; j < vertNum; ++j) {
-			// we only do hash filtering if need to be
-			if (m_bHash) {
-				// use float to avoid integer devision
-				float inDegi = vvInNeigh[i].size();
-				int inDegj = vvInNeigh[j].size();
+			// use float to avoid integer devision
+			float inDegi = vvInNeigh[i].size();
+			int inDegj = vvInNeigh[j].size();
 
-				float inRatio;
-				if (inDegi >= inDegj) {
-					inRatio = inDegj / inDegi;
-				}
-				else {
-					inRatio = inDegi / inDegj;
-				}
-
-				// use float to avoid integer devision
-				float outDegi = vvOutNeigh[i].size();
-				int outDegj = vvOutNeigh[j].size();
-
-				float outRatio;
-				if (outDegi >= outDegj) {
-					outRatio = outDegj / outDegi;
-				}
-				else {
-					outRatio = outDegi / outDegj;
-				}
-
-
-				// perform rule1 test now
-				if ((1-beta) * inRatio + beta * outRatio > thresRatio) {
-
-					// perform rule2 testconstructDegVec
-					// find maximum matching between u and v
-
-					hValidPair->insert(make_pair(i, j));
-				}
+			float inRatio;
+			if (inDegi >= inDegj) {
+				inRatio = inDegj / inDegi;
 			}
-			// no iceberg so insert all pairs into hValidPair
 			else {
-				hValidPair->insert(make_pair(i,j));
+				inRatio = inDegi / inDegj;
 			}
 
+			// use float to avoid integer devision
+			float outDegi = vvOutNeigh[i].size();
+			int outDegj = vvOutNeigh[j].size();
+
+			float outRatio;
+			if (outDegi >= outDegj) {
+				outRatio = outDegj / outDegi;
+			}
+			else {
+				outRatio = outDegi / outDegj;
+			}
+
+
+			// perform rule1 test now
+			if ((1-beta) * inRatio + beta * outRatio > thresRatio) {
+
+				// perform rule2 testconstructDegVec
+				// find maximum matching between u and v
+
+				hValidPair->insert(make_pair(i, j));
+			}
 		} // end of inner for loop over vertices
 	} // end of outer for loop
 
@@ -579,7 +594,7 @@ void AutoSimHash::constructNeighDegVec(std::vector<std::vector<int> >& vvInHist,
 } // end of constructDegVec()
 
 
-void AutoSimHash::hashVectors(std::vector<std::vector<int> >& vvVertBuckets, const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist) const
+void AutoSimHash::hashVectors(const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist) const
 {
 
 

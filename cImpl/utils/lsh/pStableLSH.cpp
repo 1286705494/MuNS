@@ -18,9 +18,9 @@ PStableLSH::PStableLSH(int pointDim, int projWidth, int projPerHashVal, int hash
 	: m_projWidth(projWidth), m_projPerHashVal(projPerHashVal), m_hashTableNum(hashTableNum), m_vHashFunc(NULL), m_vHashTable(NULL)
 {
 	// initialise the hash functions
-	m_vHashFunc = new PStableHash[projPerHashVal];
+	m_vHashFunc = new PStableHash*[projPerHashVal];
 	for (int k = 0; k < projPerHashVal; ++k) {
-		m_vHashFunc[k] = PStableHash(pointDim, projWidth);
+		m_vHashFunc[k] = new PStableHash(pointDim, projWidth);
 	}
 
 	// initialise the hash table
@@ -36,6 +36,9 @@ PStableLSH::PStableLSH(int pointDim, int projWidth, int projPerHashVal, int hash
 PStableLSH::~PStableLSH()
 {
 	delete[] m_vHashTable;
+	for (int k = 0; k < m_projPerHashVal; ++k) {
+		delete m_vHashFunc[k];
+	}
 	delete[] m_vHashFunc;
 } // end of ~PStableLSH()
 
@@ -44,7 +47,7 @@ PStableLSH::~PStableLSH()
 void PStableLSH::insertPoint(const POINT& vPoint, int pointId)
 {
 	// TODO: assume one hash function and table for now
-	int bucket = m_vHashFunc[0].hash(vPoint);
+	int bucket = m_vHashFunc[0]->hash(vPoint);
 	m_vHashTable[0][bucket].push_back(pointId);
 } // end of insertPoint()
 
