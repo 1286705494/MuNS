@@ -28,7 +28,7 @@ class PStableLSH : public LSH
 {
 protected:
 
-typedef std::vector<std::vector<int> > HASH_TABLE;
+
 
 protected:
 
@@ -57,7 +57,7 @@ public:
 
 	PStableLSH(int pointDim, int projWidth, int projPerHashVal = 1, int hashTableNum = 1);
 
-	~PStableLSH();
+	virtual ~PStableLSH();
 
 	/**
 	 * Insert a point into the hash table.
@@ -66,10 +66,9 @@ public:
 
 
 	/**
-	 * Get the contents of bucket 'bucket' from hash table 'hashTableIndex'.
+	 * @returns: combined hash table.
 	 */
-	const std::vector<int>& getBucket(int hashTableIndex, int bucket) const;
-
+	virtual const HASH_TABLE& getBuckets() const;
 
 
 protected:

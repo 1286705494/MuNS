@@ -56,6 +56,8 @@ bool g_bVertSubtractOne = false;
 int g_randGraphVertNum = 0;
 
 std::string g_hashFuncName = "pStable";
+int g_binNum = 10;
+int g_hashBucketNum = 5;
 
 
 
@@ -264,10 +266,10 @@ int main(int argc, char *argv[])
 	}
     else if (strcmp(sMeasure, "hashAutosim") == 0) {
     	if (g_bUseConvEpsilon) {
-    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergApproxFactor, g_hashFuncName);
+    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_convEpsilon, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergApproxFactor, g_hashFuncName, g_binNum, g_hashBucketNum);
     	}
     	else {
-    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergApproxFactor, g_hashFuncName);
+    		pfSim = new AutoSimHash(g_dampingFactor, g_iterInfo, g_initAlgorName, true, g_earlySimStopThres, g_bUseInputBalance, g_ioBalance, g_icebergApproxFactor, g_hashFuncName, g_binNum, g_hashBucketNum);
     	}
     }
     else {
@@ -384,7 +386,7 @@ int getOptions(int argc, char* argv[])
 	/*
 	* f -
 	*/
-	const char* optString = "t:d:i:e:b:c:a:s:r:mh:";
+	const char* optString = "t:d:i:e:b:c:a:s:r:mh:n:u:";
 	while ((currOpt = getopt(argc, argv, optString)) != -1) {
 		switch (currOpt) {
 			case 't':
@@ -422,6 +424,12 @@ int getOptions(int argc, char* argv[])
 				break;
 			case 'h':
 				g_hashFuncName = optarg;
+				break;
+			case 'n':
+				g_binNum = atoi(optarg);
+				break;
+			case 'u':
+				g_hashBucketNum = atoi(optarg);
 				break;
 			default:
 				std::cerr << currOpt << " is not a valid option." << std::endl;

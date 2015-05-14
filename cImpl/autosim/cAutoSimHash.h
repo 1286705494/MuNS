@@ -106,7 +106,7 @@ protected:
 	/**
 	 * LSH Hash the neighbourhood degree vectors into bins.
 	 */
-	void hashVectors(const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist) const;
+	void hashVectors(const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist);
 
 }; // end of class AutoSimHash
 

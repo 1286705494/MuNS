@@ -7,6 +7,8 @@
 
 
 #include <iostream>
+#include <iterator>
+#include <algorithm>
 #include <utility>
 #include <vector>
 #include <list>
@@ -400,47 +402,22 @@ void AutoSimHash::hashFilter(const std::vector< std::vector<int> >& vvInNeigh, c
 	hashVectors(vvInHist, vvOutHist);
 
 	// see which vertex pairs are in the same bin, and insert those into hashpair groups
+	const HASH_TABLE& vvHashTable = m_hashFunc->getBuckets();
 
-	float thresRatio = 0.0;
-	float beta = 0.0;
-
-	for (int i = 0; i < vertNum; ++i) {
-		for (int j = i + 1; j < vertNum; ++j) {
-			// use float to avoid integer devision
-			float inDegi = vvInNeigh[i].size();
-			int inDegj = vvInNeigh[j].size();
-
-			float inRatio;
-			if (inDegi >= inDegj) {
-				inRatio = inDegj / inDegi;
+	typename HASH_TABLE::const_iterator hit = vvHashTable.begin();
+	for ( ; hit != vvHashTable.end(); ++hit) {
+		// examine each bucket
+		typename HASH_TABLE::value_type::const_iterator vit = hit->begin();
+		for ( ; vit != hit->end(); ++vit) {
+			typename HASH_TABLE::value_type::const_iterator oit = vit;
+			++oit;
+			for ( ; oit != hit->end(); ++oit) {
+				// insert pair in same bucket
+				hValidPair->insert(make_pair(*vit, *oit));
 			}
-			else {
-				inRatio = inDegi / inDegj;
-			}
+		} // end of inner loop
+	} // end of outer loop
 
-			// use float to avoid integer devision
-			float outDegi = vvOutNeigh[i].size();
-			int outDegj = vvOutNeigh[j].size();
-
-			float outRatio;
-			if (outDegi >= outDegj) {
-				outRatio = outDegj / outDegi;
-			}
-			else {
-				outRatio = outDegi / outDegj;
-			}
-
-
-			// perform rule1 test now
-			if ((1-beta) * inRatio + beta * outRatio > thresRatio) {
-
-				// perform rule2 testconstructDegVec
-				// find maximum matching between u and v
-
-				hValidPair->insert(make_pair(i, j));
-			}
-		} // end of inner for loop over vertices
-	} // end of outer for loop
 
 } // end of hashFilter()
 
@@ -594,9 +571,16 @@ void AutoSimHash::constructNeighDegVec(std::vector<std::vector<int> >& vvInHist,
 } // end of constructDegVec()
 
 
-void AutoSimHash::hashVectors(const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist) const
+void AutoSimHash::hashVectors(const std::vector<std::vector<int> >& vvInHist, const std::vector<std::vector<int> >& vvOutHist)
 {
-
+	assert(vvInHist.size() == vvOutHist.size());
+	// insert the neighbourhood vectors into the embedded hash tables
+	for (int i = 0; i < vvInHist.size(); ++i) {
+		// TODO: possibly make moer efficient
+		std::vector<int> vTemp(vvInHist[i].begin(), vvInHist[i].end());
+		std::copy(vvOutHist[i].begin(), vvOutHist[i].end(), std::back_inserter(vTemp));
+		m_hashFunc->insertPoint(vTemp, i);
+	}
 
 } // end of hash()
 

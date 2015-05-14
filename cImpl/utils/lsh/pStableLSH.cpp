@@ -53,10 +53,10 @@ void PStableLSH::insertPoint(const POINT& vPoint, int pointId)
 
 
 
-const std::vector<int>& PStableLSH::getBucket(int hashTableIndex, int bucket) const
+const HASH_TABLE& PStableLSH::getBuckets() const
 {
 	// TODO: assume one hash table for now
-	return m_vHashTable[0][bucket];
+	return *m_vHashTable;
 }
 
 
